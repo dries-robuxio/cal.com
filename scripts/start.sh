@@ -1,8 +1,19 @@
 #!/bin/sh
 set -x
 
-# Debug: Print environment variables (Railway injection check)
-echo "=== Railway Environment Check ==="
+# Debug: Print ALL environment variables to see what Railway injects
+echo "=== ALL Environment Variables ==="
+env | sort
+echo "================================="
+
+# Check if Railway-specific vars exist
+echo "=== Railway Specific Check ==="
+echo "RAILWAY_ENVIRONMENT: $RAILWAY_ENVIRONMENT"
+echo "RAILWAY_PROJECT_NAME: $RAILWAY_PROJECT_NAME"
+echo "================================="
+
+# Debug: Print critical variables
+echo "=== Critical Variables Check ==="
 echo "NEXTAUTH_SECRET is set: $([ -n "$NEXTAUTH_SECRET" ] && echo 'YES' || echo 'NO')"
 echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'YES' || echo 'NO')"
 echo "NEXT_PUBLIC_WEBAPP_URL: $NEXT_PUBLIC_WEBAPP_URL"
