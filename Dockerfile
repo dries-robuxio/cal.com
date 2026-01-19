@@ -88,8 +88,7 @@ ENV NEXT_PUBLIC_WEBAPP_URL=$NEXT_PUBLIC_WEBAPP_URL \
 ENV NODE_ENV=production
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=30s --retries=5 \
-  CMD wget --spider http://localhost:3000 || exit 1
+# Healthcheck removed - Railway's external healthcheck handles this via /api/health
 
 # Use shell form for CMD to ensure environment variables are available
 CMD /calcom/scripts/start.sh

@@ -1,6 +1,7 @@
 #!/bin/sh
 
 echo "=== Cal.com Start Script ==="
+echo "PORT environment variable: ${PORT:-not set, defaulting to 3000}"
 echo "NEXTAUTH_SECRET set: $([ -n "$NEXTAUTH_SECRET" ] && echo 'YES' || echo 'NO')"
 echo "DATABASE_URL set: $([ -n "$DATABASE_URL" ] && echo 'YES' || echo 'NO')"
 echo "NEXT_PUBLIC_WEBAPP_URL: $NEXT_PUBLIC_WEBAPP_URL"
