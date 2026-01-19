@@ -130,7 +130,8 @@ export class NoopLicenseKeyService implements ILicenseKeyService {
   }
 
   async checkLicense(): Promise<boolean> {
-    return Promise.resolve(process.env.NEXT_PUBLIC_IS_E2E === "1");
+    // Self-hosted: always return true to enable EE features (workflows, etc.)
+    return Promise.resolve(true);
   }
 }
 
