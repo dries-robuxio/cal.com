@@ -1,6 +1,13 @@
 #!/bin/sh
 set -x
 
+# Debug: Print environment variables (Railway injection check)
+echo "=== Railway Environment Check ==="
+echo "NEXTAUTH_SECRET is set: $([ -n "$NEXTAUTH_SECRET" ] && echo 'YES' || echo 'NO')"
+echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'YES' || echo 'NO')"
+echo "NEXT_PUBLIC_WEBAPP_URL: $NEXT_PUBLIC_WEBAPP_URL"
+echo "================================="
+
 # Replace the statically built BUILT_NEXT_PUBLIC_WEBAPP_URL with run-time NEXT_PUBLIC_WEBAPP_URL
 # NOTE: if these values are the same, this will be skipped.
 scripts/replace-placeholder.sh "$BUILT_NEXT_PUBLIC_WEBAPP_URL" "$NEXT_PUBLIC_WEBAPP_URL"
