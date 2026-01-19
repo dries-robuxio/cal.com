@@ -1,42 +1,34 @@
 #!/bin/sh
-set -x
 
-# Debug: Print ALL environment variables to see what Railway injects
-echo "=== ALL Environment Variables ==="
-env | sort
-echo "================================="
-
-# Check if Railway-specific vars exist
-echo "=== Railway Specific Check ==="
-echo "RAILWAY_ENVIRONMENT: $RAILWAY_ENVIRONMENT"
-echo "RAILWAY_PROJECT_NAME: $RAILWAY_PROJECT_NAME"
-echo "================================="
-
-# Debug: Print critical variables
-echo "=== Critical Variables Check ==="
-echo "NEXTAUTH_SECRET is set: $([ -n "$NEXTAUTH_SECRET" ] && echo 'YES' || echo 'NO')"
-echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'YES' || echo 'NO')"
+echo "=== Cal.com Start Script ==="
+echo "NEXTAUTH_SECRET set: $([ -n "$NEXTAUTH_SECRET" ] && echo 'YES' || echo 'NO')"
+echo "DATABASE_URL set: $([ -n "$DATABASE_URL" ] && echo 'YES' || echo 'NO')"
 echo "NEXT_PUBLIC_WEBAPP_URL: $NEXT_PUBLIC_WEBAPP_URL"
-echo "================================="
 
-# Replace the statically built BUILT_NEXT_PUBLIC_WEBAPP_URL with run-time NEXT_PUBLIC_WEBAPP_URL
-# NOTE: if these values are the same, this will be skipped.
+# Replace URL placeholders
 scripts/replace-placeholder.sh "$BUILT_NEXT_PUBLIC_WEBAPP_URL" "$NEXT_PUBLIC_WEBAPP_URL"
 
-# Extract DATABASE_HOST from DATABASE_URL if not set (for Railway compatibility)
+# Extract DATABASE_HOST from DATABASE_URL if not set
 if [ -z "$DATABASE_HOST" ] && [ -n "$DATABASE_URL" ]; then
-  # Extract host:port from postgresql://user:pass@host:port/db
   DATABASE_HOST=$(echo "$DATABASE_URL" | sed -E 's|.*@([^/]+)/.*|\1|')
-  echo "Extracted DATABASE_HOST: $DATABASE_HOST"
+  echo "DATABASE_HOST: $DATABASE_HOST"
 fi
 
-# Wait for database if DATABASE_HOST is available
+# Wait for database
 if [ -n "$DATABASE_HOST" ]; then
-  scripts/wait-for-it.sh ${DATABASE_HOST} -- echo "database is up"
-else
-  echo "DATABASE_HOST not set, skipping wait-for-it (assuming database is ready)"
+  scripts/wait-for-it.sh ${DATABASE_HOST} -t 60 -- echo "Database is ready"
 fi
 
+# Run migrations
+echo "Running database migrations..."
 npx prisma migrate deploy --schema /calcom/packages/prisma/schema.prisma
-npx ts-node --transpile-only /calcom/scripts/seed-app-store.ts
+MIGRATE_EXIT=$?
+echo "Migration exit code: $MIGRATE_EXIT"
+
+# Seed app store (non-fatal - continue even if it fails)
+echo "Seeding app store (errors are non-fatal)..."
+npx ts-node --transpile-only /calcom/scripts/seed-app-store.ts 2>/dev/null || echo "App store seeding had errors (this is OK for initial setup)"
+
+# Start the app
+echo "Starting Cal.com..."
 yarn start
