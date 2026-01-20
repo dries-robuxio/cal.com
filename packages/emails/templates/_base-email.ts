@@ -1,4 +1,5 @@
 import { decodeHTML } from "entities";
+import { Resend } from "resend";
 import { z } from "zod";
 
 import dayjs from "@calcom/dayjs";
@@ -10,6 +11,9 @@ import { setTestEmail } from "@calcom/lib/testEmails";
 import { prisma } from "@calcom/prisma";
 
 import { sanitizeDisplayName } from "../lib/sanitizeDisplayName";
+
+// Initialize Resend client if API key is available
+const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export default class BaseEmail {
   name = "";
@@ -62,6 +66,30 @@ export default class BaseEmail {
     const sanitizedTo = sanitizeDisplayName(to);
 
     const parseSubject = z.string().safeParse(payload?.subject);
+    const subject = parseSubject.success ? decodeHTML(parseSubject.data) : "";
+
+    // Use Resend HTTP API if available (bypasses SMTP blocking)
+    if (resendClient) {
+      try {
+        const html = "html" in payload ? (payload.html as string) : "";
+        const text = "text" in payload ? (payload.text as string) : undefined;
+
+        await resendClient.emails.send({
+          from: sanitizedFrom,
+          to: sanitizedTo,
+          subject,
+          html,
+          text,
+        });
+        console.log(`Email sent via Resend HTTP API to: ${sanitizedTo}`);
+        return new Promise((resolve) => resolve("send mail via resend"));
+      } catch (e) {
+        console.error("sendEmail via Resend", `from: ${sanitizedFrom}`, `subject: ${subject}`, e);
+        throw e;
+      }
+    }
+
+    // Fallback to nodemailer SMTP
     const payloadWithUnEscapedSubject = {
       headers: this.getMailerOptions().headers,
       ...payload,
@@ -69,7 +97,7 @@ export default class BaseEmail {
         from: sanitizedFrom,
         to: sanitizedTo,
       },
-      ...(parseSubject.success && { subject: decodeHTML(parseSubject.data) }),
+      ...(parseSubject.success && { subject }),
     };
     const { createTransport } = await import("nodemailer");
     await new Promise((resolve, reject) =>
