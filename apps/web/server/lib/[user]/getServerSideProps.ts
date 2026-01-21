@@ -120,13 +120,10 @@ export const getServerSideProps: GetServerSideProps<UserPageProps> = async (cont
     } as const;
   }
 
-  const isNonOrgUser = (user: { profile: UserProfile }) => {
-    return !user.profile?.organization;
-  };
-
-  const isThereAnyNonOrgUser = usersInOrgContext.some(isNonOrgUser);
-
-  if (!usersInOrgContext.length || (!isValidOrgDomain && !isThereAnyNonOrgUser)) {
+  // On the main domain (non-org domain), allow displaying any user
+  // This enables single-tenant setups where users may have org associations
+  // but should still be accessible from the main domain
+  if (!usersInOrgContext.length) {
     return {
       notFound: true,
     } as const;
