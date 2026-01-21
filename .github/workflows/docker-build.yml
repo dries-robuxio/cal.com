@@ -54,4 +54,4 @@ jobs:
             CALCOM_TELEMETRY_DISABLED=true
             MAX_OLD_SPACE_SIZE=8192
             ORGANIZATIONS_ENABLED=true
-            EMAIL_FROM=notifications@cal.com
+            EMAIL_FROM=onboarding@resend.dev
