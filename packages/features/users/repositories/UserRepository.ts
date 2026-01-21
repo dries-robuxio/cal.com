@@ -286,14 +286,14 @@ export class UserRepository {
             username: {
               in: usernameList,
             },
+            // Only filter by org when explicitly looking for org users
+            // When orgSlug is null (main domain), find any user with that username
             ...(orgSlug
               ? {
                   organization:
                     whereClauseForOrgWithSlugOrRequestedSlug(orgSlug),
                 }
-              : {
-                  organization: null,
-                }),
+              : {}),
           };
     return { where, profiles };
   }
