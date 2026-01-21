@@ -2,6 +2,15 @@
 builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
+[build.args]
+ALLOWED_HOSTNAMES = "${{ALLOWED_HOSTNAMES}}"
+NEXT_PUBLIC_WEBAPP_URL = "${{NEXT_PUBLIC_WEBAPP_URL}}"
+DATABASE_URL = "${{DATABASE_URL}}"
+NEXTAUTH_SECRET = "${{NEXTAUTH_SECRET}}"
+CALENDSO_ENCRYPTION_KEY = "${{CALENDSO_ENCRYPTION_KEY}}"
+MAX_OLD_SPACE_SIZE = "${{MAX_OLD_SPACE_SIZE}}"
+CALCOM_TELEMETRY_DISABLED = "${{CALCOM_TELEMETRY_DISABLED}}"
+
 [deploy]
 healthcheckPath = "/api/health"
 healthcheckTimeout = 600
