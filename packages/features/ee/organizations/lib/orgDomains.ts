@@ -37,6 +37,18 @@ export function getOrgSlug(hostname: string, forcedSlug?: string) {
     // A no-dot domain can never be org domain. It automatically considers localhost to be non-org domain
     return null;
   }
+
+  // If hostname exactly matches WEBAPP_URL hostname, this is not an org domain
+  const webappHostname = (() => {
+    const url = new URL(WEBAPP_URL);
+    return `${url.hostname}${url.port ? `:${url.port}` : ""}`;
+  })();
+
+  if (hostname === webappHostname) {
+    log.debug("Hostname matches WEBAPP_URL exactly, not an org domain", { hostname, webappHostname });
+    return null;
+  }
+
   // Find which hostname is being currently used
   const currentHostname = ALLOWED_HOSTNAMES.find((ahn) => {
     const url = new URL(WEBAPP_URL);
