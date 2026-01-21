@@ -50,7 +50,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NEXT_PUBLIC_LICENSE_CONSENT=agree
-            NEXT_PUBLIC_WEBAPP_URL=http://NEXT_PUBLIC_WEBAPP_URL_PLACEHOLDER
+            NEXT_PUBLIC_WEBAPP_URL=https://call.robuxio.com
             CALCOM_TELEMETRY_DISABLED=true
             MAX_OLD_SPACE_SIZE=8192
             ORGANIZATIONS_ENABLED=true
