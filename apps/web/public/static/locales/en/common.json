@@ -1014,6 +1014,7 @@
   "timezone": "Timezone",
   "timezone_search_hint": "Type a city or region to search",
   "timezone_change_hint": "Timezone (click to change)",
+  "change_timezone": "Change timezone",
   "first_day_of_week": "First day of week",
   "repeats_up_to_one": "Repeats up to {{count}} time",
   "repeats_up_to_other": "Repeats up to {{count}} times",
