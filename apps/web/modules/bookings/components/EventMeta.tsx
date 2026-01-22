@@ -177,7 +177,7 @@ export const EventMeta = ({
           {(event.description || translatedDescription) && (
             <EventMetaBlock data-testid="event-meta-description" contentClassName="mb-8">
               <ScrollableWithGradients
-                className="wrap-break-word scroll-bar max-h-[180px] max-w-full overflow-y-auto pr-4"
+                className="wrap-break-word scroll-bar max-h-[280px] max-w-full overflow-y-auto pr-4 text-base leading-relaxed"
                 ariaLabel={t("description")}>
                 {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized via markdownToSafeHTMLClient */}
                 <div
