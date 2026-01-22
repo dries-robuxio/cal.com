@@ -523,10 +523,12 @@ const BookerComponent = ({
                 layout === BookerLayouts.COLUMN_VIEW
               }
               className={classNames(
-                "border-subtle rtl:border-default flex h-full w-full flex-col overflow-x-auto px-5 py-3 pb-0 rtl:border-r ltr:md:border-l",
+                "border-subtle rtl:border-default flex h-full w-full flex-col px-5 py-3 pb-0 rtl:border-r ltr:md:border-l",
+                // On mobile/embed: no overflow scrolling, let content flow naturally
+                isEmbed || layout === "mobile" ? "overflow-visible" : "overflow-x-auto",
                 layout === BookerLayouts.MONTH_VIEW &&
                   "h-full overflow-hidden md:w-(--booker-timeslots-width)",
-                layout !== BookerLayouts.MONTH_VIEW && "sticky top-0"
+                layout !== BookerLayouts.MONTH_VIEW && !isEmbed && "sticky top-0"
               )}
               ref={timeslotsRef}
               {...fadeInLeft}>
