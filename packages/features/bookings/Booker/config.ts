@@ -73,7 +73,7 @@ export const resizeAnimationConfig: ResizeAnimationConfig = {
   },
   month_view: {
     default: {
-      width: "calc(var(--booker-meta-width) + var(--booker-main-width))",
+      width: "min(calc(var(--booker-meta-width) + var(--booker-main-width)), 100%)",
       minHeight: "450px",
       height: "auto",
       gridTemplateAreas: `
@@ -84,7 +84,7 @@ export const resizeAnimationConfig: ResizeAnimationConfig = {
       gridTemplateRows: "1fr 0fr",
     },
     selecting_time: {
-      width: "calc(var(--booker-meta-width) + var(--booker-main-width) + var(--booker-timeslots-width))",
+      width: "min(calc(var(--booker-meta-width) + var(--booker-main-width) + var(--booker-timeslots-width)), 100%)",
       minHeight: "450px",
       height: "auto",
       gridTemplateAreas: `
@@ -135,26 +135,34 @@ export const getBookerSizeClassNames = (
     return className;
   };
 
+  // Check if we're in an embed context for responsive sizing
+  const isEmbed = typeof window !== "undefined" && window?.isEmbed?.();
+
   return [
     // Size settings are abstracted on their own lines purely for readability.
-    // General sizes, used always
-    "[--booker-timeslots-width:240px] lg:[--booker-timeslots-width:280px]",
-    // Small calendar defaults
-    layout === BookerLayouts.MONTH_VIEW && getBookerMetaClass("[--booker-meta-width:380px]"),
+    // General sizes, used always - slightly smaller for better fit
+    "[--booker-timeslots-width:220px] lg:[--booker-timeslots-width:260px]",
+    // Meta column width for MONTH_VIEW - set to 0 when hideEventTypeDetails is true to collapse the column
+    layout === BookerLayouts.MONTH_VIEW &&
+      (hideEventTypeDetails
+        ? "[--booker-meta-width:0px]"
+        : "[--booker-meta-width:320px] lg:[--booker-meta-width:360px]"),
     // Meta column gets wider in booking view to fit the full date on a single row in case
     // of a multi occurrence event. Also makes form less wide, which also looks better.
     layout === BookerLayouts.MONTH_VIEW &&
       bookerState === "booking" &&
-      `[--booker-main-width:420px] ${getBookerMetaClass("lg:[--booker-meta-width:460px]")}`,
+      `[--booker-main-width:380px] lg:[--booker-main-width:420px] ${getBookerMetaClass("lg:[--booker-meta-width:400px]")}`,
     // Smaller meta when not in booking view.
     layout === BookerLayouts.MONTH_VIEW &&
       bookerState !== "booking" &&
-      `[--booker-main-width:480px] ${getBookerMetaClass("lg:[--booker-meta-width:460px]")}`,
+      `[--booker-main-width:420px] lg:[--booker-main-width:460px] ${getBookerMetaClass("lg:[--booker-meta-width:400px]")}`,
     // Fullscreen view settings.
     layout !== BookerLayouts.MONTH_VIEW &&
-      `[--booker-main-width:480px] [--booker-meta-width:340px] ${getBookerMetaClass(
-        "lg:[--booker-meta-width:424px]"
+      `[--booker-main-width:420px] lg:[--booker-main-width:480px] [--booker-meta-width:300px] ${getBookerMetaClass(
+        "lg:[--booker-meta-width:380px]"
       )}`,
+    // Ensure max-width constraint for embeds
+    isEmbed && "max-w-full",
   ];
 };
 
@@ -167,7 +175,6 @@ export const useBookerResizeAnimation = (layout: BookerLayout, state: BookerStat
   const prefersReducedMotion = useReducedMotion();
   const [animationScope, animate] = useAnimate();
   const isEmbed = typeof window !== "undefined" && window?.isEmbed?.();
-  ``;
   useEffect(() => {
     const animationConfig = resizeAnimationConfig[layout][state] || resizeAnimationConfig[layout].default;
 

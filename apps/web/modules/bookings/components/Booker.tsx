@@ -345,7 +345,8 @@ const BookerComponent = ({
           "main",
           "text-default flex min-h-full w-full flex-col items-center",
           layout === BookerLayouts.MONTH_VIEW && !isEmbed && "my-20 ",
-          layout === BookerLayouts.MONTH_VIEW ? "overflow-visible" : "overflow-clip",
+          // For embeds, always clip overflow to prevent bleed outside iframe
+          isEmbed ? "overflow-hidden" : (layout === BookerLayouts.MONTH_VIEW ? "overflow-visible" : "overflow-clip"),
           `${customClassNames?.bookerWrapper}`
         )}>
         <div
@@ -359,6 +360,8 @@ const BookerComponent = ({
             !isEmbed && "sm:transition-[width] sm:duration-300",
             isEmbed && layout === BookerLayouts.MONTH_VIEW && "border-booker sm:border-booker-width",
             !isEmbed && layout === BookerLayouts.MONTH_VIEW && `border-subtle border`,
+            // Embed-specific: prevent overflow and ensure fit
+            isEmbed && "overflow-hidden",
             `${customClassNames?.bookerContainer}`
           )}>
           <AnimatePresence>
@@ -405,54 +408,57 @@ const BookerComponent = ({
                 )}
               </BookerSection>
             )}
-            <StickyOnDesktop key="meta" className={classNames("relative z-10 flex [grid-area:meta]")}>
-              <BookerSection
-                area="meta"
-                className="max-w-screen flex w-full flex-col md:w-(--booker-meta-width)">
-                {!hideEventTypeDetails && orgBannerUrl && (
-                  <img
-                    loading="eager"
-                    className="-mb-9 h-auto w-full object-contain object-top ltr:rounded-tl-md rtl:rounded-tr-md sm:h-16 sm:object-cover"
-                    alt="org banner"
-                    src={orgBannerUrl}
-                  />
-                )}
-                {!hideEventTypeDetails && (
-                  <EventMeta
-                    selectedTimeslot={selectedTimeslot}
-                    classNames={{
-                      eventMetaContainer: customClassNames?.eventMetaCustomClassNames?.eventMetaContainer,
-                      eventMetaTitle: customClassNames?.eventMetaCustomClassNames?.eventMetaTitle,
-                      eventMetaTimezoneSelect:
-                        customClassNames?.eventMetaCustomClassNames?.eventMetaTimezoneSelect,
-                    }}
-                    event={event.data}
-                    isPending={event.isPending}
-                    isPlatform={isPlatform}
-                    isPrivateLink={!!hashedLink}
-                    locale={userLocale}
-                    timeZones={timeZones}
-                    roundRobinHideOrgAndTeam={roundRobinHideOrgAndTeam}
-                    showTimezoneSelect={layout !== BookerLayouts.MONTH_VIEW}
-                    hideEventTypeDetails={hideEventTypeDetails}>
-                    {eventMetaChildren}
-                  </EventMeta>
-                )}
-                {layout !== BookerLayouts.MONTH_VIEW &&
-                  !(layout === "mobile" && bookerState === "booking") && (
-                    <div className="mt-auto px-5 py-3">
-                      <DatePicker
-                        classNames={customClassNames?.datePickerCustomClassNames}
-                        event={event}
-                        slots={schedule?.data?.slots}
-                        isLoading={schedule.isPending}
-                        scrollToTimeSlots={scrollToTimeSlots}
-                        showNoAvailabilityDialog={showNoAvailabilityDialog}
-                      />
-                    </div>
+            {/* Hide meta section entirely for MONTH_VIEW when hideEventTypeDetails is true - it's empty anyway */}
+            {!(hideEventTypeDetails && layout === BookerLayouts.MONTH_VIEW) && (
+              <StickyOnDesktop key="meta" className={classNames("relative z-10 flex [grid-area:meta]")}>
+                <BookerSection
+                  area="meta"
+                  className="max-w-screen flex w-full flex-col md:w-(--booker-meta-width)">
+                  {!hideEventTypeDetails && orgBannerUrl && (
+                    <img
+                      loading="eager"
+                      className="-mb-9 h-auto w-full object-contain object-top ltr:rounded-tl-md rtl:rounded-tr-md sm:h-16 sm:object-cover"
+                      alt="org banner"
+                      src={orgBannerUrl}
+                    />
                   )}
-              </BookerSection>
-            </StickyOnDesktop>
+                  {!hideEventTypeDetails && (
+                    <EventMeta
+                      selectedTimeslot={selectedTimeslot}
+                      classNames={{
+                        eventMetaContainer: customClassNames?.eventMetaCustomClassNames?.eventMetaContainer,
+                        eventMetaTitle: customClassNames?.eventMetaCustomClassNames?.eventMetaTitle,
+                        eventMetaTimezoneSelect:
+                          customClassNames?.eventMetaCustomClassNames?.eventMetaTimezoneSelect,
+                      }}
+                      event={event.data}
+                      isPending={event.isPending}
+                      isPlatform={isPlatform}
+                      isPrivateLink={!!hashedLink}
+                      locale={userLocale}
+                      timeZones={timeZones}
+                      roundRobinHideOrgAndTeam={roundRobinHideOrgAndTeam}
+                      showTimezoneSelect={layout !== BookerLayouts.MONTH_VIEW}
+                      hideEventTypeDetails={hideEventTypeDetails}>
+                      {eventMetaChildren}
+                    </EventMeta>
+                  )}
+                  {layout !== BookerLayouts.MONTH_VIEW &&
+                    !(layout === "mobile" && bookerState === "booking") && (
+                      <div className="mt-auto px-5 py-3">
+                        <DatePicker
+                          classNames={customClassNames?.datePickerCustomClassNames}
+                          event={event}
+                          slots={schedule?.data?.slots}
+                          isLoading={schedule.isPending}
+                          scrollToTimeSlots={scrollToTimeSlots}
+                          showNoAvailabilityDialog={showNoAvailabilityDialog}
+                        />
+                      </div>
+                    )}
+                </BookerSection>
+              </StickyOnDesktop>
+            )}
 
             <BookerSection
               key="book-event-form"
