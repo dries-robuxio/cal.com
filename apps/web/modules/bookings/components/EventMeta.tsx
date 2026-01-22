@@ -204,7 +204,7 @@ export const EventMeta = ({
           {bookerState !== "booking" && (event.description || translatedDescription) && (
             <EventMetaBlock data-testid="event-meta-description" contentClassName="mb-8">
               <ScrollableWithGradients
-                className="wrap-break-word scroll-bar max-h-[280px] max-w-full overflow-y-auto pr-4 text-base leading-relaxed"
+                className="wrap-break-word max-w-full overflow-visible text-base leading-relaxed"
                 ariaLabel={t("description")}>
                 {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized via markdownToSafeHTMLClient */}
                 <div
