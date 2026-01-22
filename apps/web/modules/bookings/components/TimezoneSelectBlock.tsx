@@ -184,8 +184,7 @@ export const TimezoneSelectBlock = ({
             <TimezoneSelect
               className={isProminent ? "w-full" : undefined}
               timeZones={timeZones}
-              menuPosition={isProminent ? "fixed" : "absolute"}
-              menuPortalTarget={menuPortalTarget}
+              menuPosition="absolute"
               timezoneSelectCustomClassname={timezoneSelectClassName}
               placeholder={t("timezone_search_hint")}
               size={isProminent ? "md" : "sm"}
