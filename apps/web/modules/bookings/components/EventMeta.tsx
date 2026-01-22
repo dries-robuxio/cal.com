@@ -186,6 +186,9 @@ export const EventMeta = ({
                 timezoneSelectClassName={classNames?.eventMetaTimezoneSelect}
               />
             )}
+            {!showTimezoneSelect && bookerState === "booking" && (
+              <EventMetaBlock icon="globe">{timezone}</EventMetaBlock>
+            )}
             {bookerState === "booking" && eventTotalSeats && bookingSeatAttendeesQty ? (
               <EventMetaBlock icon="user" className={`${colorClass}`}>
                 <div className="text-bookinghighlight flex items-start text-sm">
