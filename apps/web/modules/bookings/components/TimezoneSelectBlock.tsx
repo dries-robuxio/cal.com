@@ -1,0 +1,117 @@
+import { shallow } from "zustand/shallow";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo } from "react";
+
+import { Timezone as PlatformTimezoneSelect } from "@calcom/atoms/timezone";
+import { useBookerStoreContext } from "@calcom/features/bookings/Booker/BookerStoreProvider";
+import { useBookerTime } from "@calcom/features/bookings/Booker/components/hooks/useBookerTime";
+import type { Timezone } from "@calcom/features/bookings/Booker/types";
+import type { BookerEvent } from "@calcom/features/bookings/types";
+import { useTimePreferences } from "@calcom/features/bookings/lib";
+import { CURRENT_TIMEZONE } from "@calcom/lib/timezoneConstants";
+import { useLocale } from "@calcom/lib/hooks/useLocale";
+import classNames from "@calcom/ui/classNames";
+
+import { EventMetaBlock } from "./event-meta/Details";
+
+const WebTimezoneSelect = dynamic(
+  () => import("@calcom/features/components/timezone-select").then((mod) => mod.TimezoneSelect),
+  {
+    ssr: false,
+  }
+);
+
+type TimezoneSelectBlockProps = {
+  event?: Pick<BookerEvent, "lockTimeZoneToggleOnBookingPage" | "lockedTimeZone" | "schedule"> | null;
+  isPlatform?: boolean;
+  timeZones?: Timezone[];
+  className?: string;
+  contentClassName?: string;
+  timezoneSelectClassName?: string;
+  showLabel?: boolean;
+  labelClassName?: string;
+  showIcon?: boolean;
+};
+
+export const TimezoneSelectBlock = ({
+  event,
+  isPlatform = true,
+  timeZones,
+  className,
+  contentClassName,
+  timezoneSelectClassName,
+  showLabel = false,
+  labelClassName,
+  showIcon = true,
+}: TimezoneSelectBlockProps) => {
+  const { timezone } = useBookerTime();
+  const [setTimezone] = useTimePreferences((state) => [state.setTimezone]);
+  const [setBookerStoreTimezone] = useBookerStoreContext((state) => [state.setTimezone], shallow);
+  const bookerState = useBookerStoreContext((state) => state.state);
+  const { t } = useLocale();
+  const [TimezoneSelect] = useMemo(
+    () => (isPlatform ? [PlatformTimezoneSelect] : [WebTimezoneSelect]),
+    [isPlatform]
+  );
+
+  useEffect(() => {
+    if (event?.lockTimeZoneToggleOnBookingPage) {
+      const lockedTimezone = event.lockedTimeZone || event.schedule?.timeZone;
+      if (lockedTimezone) {
+        setTimezone(lockedTimezone);
+      }
+    }
+  }, [event, setTimezone]);
+
+  return (
+    <div>
+      {showLabel && (
+        <p className={classNames("text-subtle mb-2 text-sm font-medium", labelClassName)}>
+          {t("timezone")}
+        </p>
+      )}
+      <EventMetaBlock
+        className={classNames(
+          "cursor-pointer [&_.current-timezone:before]:focus-within:opacity-100 [&_.current-timezone:before]:hover:opacity-100",
+          className
+        )}
+        contentClassName={classNames("relative max-w-[90%]", contentClassName)}
+        icon={showIcon ? "globe" : undefined}>
+        {bookerState === "booking" ? (
+          <>{timezone}</>
+        ) : (
+          <span
+            className={classNames(
+              "current-timezone before:bg-subtle min-w-32 -mt-[2px] flex h-6 max-w-full items-center justify-start before:absolute before:inset-0 before:bottom-[-3px] before:left-[-30px] before:top-[-3px] before:w-[calc(100%+35px)] before:rounded-md before:py-3 before:opacity-0 before:transition-opacity",
+              event?.lockTimeZoneToggleOnBookingPage ? "cursor-not-allowed" : ""
+            )}
+            data-testid="event-meta-current-timezone">
+            <TimezoneSelect
+              timeZones={timeZones}
+              menuPosition="absolute"
+              timezoneSelectCustomClassname={timezoneSelectClassName}
+              classNames={{
+                control: () =>
+                  "min-h-0! p-0 w-full border-0 bg-transparent focus-within:ring-0 shadow-none!",
+                menu: () => "w-64! max-w-[90vw] mb-1 ",
+                singleValue: () => "text-text py-1",
+                indicatorsContainer: () => "ml-auto",
+                container: () => "max-w-full",
+              }}
+              value={
+                event?.lockTimeZoneToggleOnBookingPage
+                  ? event.lockedTimeZone || CURRENT_TIMEZONE
+                  : timezone
+              }
+              onChange={({ value }) => {
+                setTimezone(value);
+                setBookerStoreTimezone(value);
+              }}
+              isDisabled={event?.lockTimeZoneToggleOnBookingPage}
+            />
+          </span>
+        )}
+      </EventMetaBlock>
+    </div>
+  );
+};

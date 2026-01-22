@@ -67,8 +67,8 @@ export const EventMembers = ({
   return (
     <>
       <AvatarGroup
-        size="sm"
-        className="border-muted"
+        size="lg"
+        className="border-muted mb-3"
         items={[
           ...orgOrTeamAvatarItem,
           ...shownUsers.map((user) => ({
@@ -85,7 +85,7 @@ export const EventMembers = ({
         ]}
       />
 
-      <p className="text-subtle mt-2 text-sm font-semibold">
+      <p className="text-text mt-2 text-sm font-semibold">
         {showOnlyProfileName
           ? profile.name
           : shownUsers
