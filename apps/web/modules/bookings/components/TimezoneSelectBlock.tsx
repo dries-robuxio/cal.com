@@ -31,6 +31,10 @@ type TimezoneSelectBlockProps = {
   showLabel?: boolean;
   labelClassName?: string;
   showIcon?: boolean;
+  showHelperText?: boolean;
+  helperText?: string;
+  helperClassName?: string;
+  isProminent?: boolean;
 };
 
 export const TimezoneSelectBlock = ({
@@ -43,6 +47,10 @@ export const TimezoneSelectBlock = ({
   showLabel = false,
   labelClassName,
   showIcon = true,
+  showHelperText = false,
+  helperText,
+  helperClassName,
+  isProminent = false,
 }: TimezoneSelectBlockProps) => {
   const { timezone } = useBookerTime();
   const [setTimezone] = useTimePreferences((state) => [state.setTimezone]);
@@ -63,6 +71,9 @@ export const TimezoneSelectBlock = ({
     }
   }, [event, setTimezone]);
 
+  const resolvedHelperText = helperText ?? t("timezone_search_hint");
+  const menuPortalTarget = isProminent && typeof document !== "undefined" ? document.body : undefined;
+
   return (
     <div>
       {showLabel && (
@@ -70,12 +81,19 @@ export const TimezoneSelectBlock = ({
           {t("timezone")}
         </p>
       )}
+      {showHelperText && (
+        <p className={classNames("text-muted mb-3 text-sm", helperClassName)}>{resolvedHelperText}</p>
+      )}
       <EventMetaBlock
         className={classNames(
           "cursor-pointer [&_.current-timezone:before]:focus-within:opacity-100 [&_.current-timezone:before]:hover:opacity-100",
           className
         )}
-        contentClassName={classNames("relative max-w-[90%]", contentClassName)}
+        contentClassName={classNames(
+          "relative",
+          isProminent ? "w-full max-w-full" : "max-w-[90%]",
+          contentClassName
+        )}
         icon={showIcon ? "globe" : undefined}>
         {bookerState === "booking" ? (
           <>{timezone}</>
@@ -87,16 +105,31 @@ export const TimezoneSelectBlock = ({
             )}
             data-testid="event-meta-current-timezone">
             <TimezoneSelect
+              className={isProminent ? "w-full" : undefined}
               timeZones={timeZones}
-              menuPosition="absolute"
+              menuPosition={isProminent ? "fixed" : "absolute"}
+              menuPortalTarget={menuPortalTarget}
               timezoneSelectCustomClassname={timezoneSelectClassName}
+              placeholder={t("timezone_search_hint")}
+              size={isProminent ? "md" : "sm"}
+              grow={isProminent}
               classNames={{
                 control: () =>
-                  "min-h-0! p-0 w-full border-0 bg-transparent focus-within:ring-0 shadow-none!",
-                menu: () => "w-64! max-w-[90vw] mb-1 ",
+                  classNames(
+                    "min-h-0! w-full border-0 bg-transparent focus-within:ring-0 shadow-none!",
+                    isProminent ? "h-11 px-4" : "p-0"
+                  ),
+                menu: () =>
+                  classNames(
+                    "mb-1",
+                    isProminent ? "w-[320px] sm:w-[360px] max-w-[90vw]" : "w-64! max-w-[90vw]"
+                  ),
                 singleValue: () => "text-text py-1",
                 indicatorsContainer: () => "ml-auto",
-                container: () => "max-w-full",
+                container: () => "w-full max-w-full",
+                input: () => classNames("text-emphasis h-6 w-full max-w-full", isProminent && "text-base"),
+                valueContainer: () => "text-emphasis placeholder:text-muted flex w-full gap-1",
+                menuList: () => classNames("max-h-[280px]", isProminent && "max-h-[320px]"),
               }}
               value={
                 event?.lockTimeZoneToggleOnBookingPage
