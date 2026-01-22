@@ -35,6 +35,7 @@ type TimezoneSelectBlockProps = {
   helperText?: string;
   helperClassName?: string;
   isProminent?: boolean;
+  labelText?: string;
 };
 
 export const TimezoneSelectBlock = ({
@@ -51,6 +52,7 @@ export const TimezoneSelectBlock = ({
   helperText,
   helperClassName,
   isProminent = false,
+  labelText,
 }: TimezoneSelectBlockProps) => {
   const { timezone } = useBookerTime();
   const [setTimezone] = useTimePreferences((state) => [state.setTimezone]);
@@ -67,18 +69,28 @@ export const TimezoneSelectBlock = ({
       const lockedTimezone = event.lockedTimeZone || event.schedule?.timeZone;
       if (lockedTimezone) {
         setTimezone(lockedTimezone);
+        setBookerStoreTimezone(lockedTimezone);
       }
     }
-  }, [event, setTimezone]);
+  }, [event, setBookerStoreTimezone, setTimezone]);
+
+  useEffect(() => {
+    if (!event?.lockTimeZoneToggleOnBookingPage && !timezone) {
+      setTimezone(CURRENT_TIMEZONE);
+      setBookerStoreTimezone(CURRENT_TIMEZONE);
+    }
+  }, [event?.lockTimeZoneToggleOnBookingPage, setBookerStoreTimezone, setTimezone, timezone]);
 
   const resolvedHelperText = helperText ?? t("timezone_search_hint");
+  const resolvedLabelText = labelText ?? t("timezone_change_hint");
+  const resolvedTimezone = timezone || CURRENT_TIMEZONE;
   const menuPortalTarget = isProminent && typeof document !== "undefined" ? document.body : undefined;
 
   return (
     <div>
       {showLabel && (
         <p className={classNames("text-subtle mb-2 text-sm font-medium", labelClassName)}>
-          {t("timezone")}
+          {resolvedLabelText}
         </p>
       )}
       {showHelperText && (
@@ -96,7 +108,7 @@ export const TimezoneSelectBlock = ({
         )}
         icon={showIcon ? "globe" : undefined}>
         {bookerState === "booking" ? (
-          <>{timezone}</>
+          <>{resolvedTimezone}</>
         ) : (
           <span
             className={classNames(
@@ -116,8 +128,10 @@ export const TimezoneSelectBlock = ({
               classNames={{
                 control: () =>
                   classNames(
-                    "min-h-0! w-full border-0 bg-transparent focus-within:ring-0 shadow-none!",
-                    isProminent ? "h-11 px-4" : "p-0"
+                    "min-h-0! w-full focus-within:ring-0 shadow-none!",
+                    isProminent
+                      ? "h-11 px-4 border border-subtle bg-default rounded-md"
+                      : "p-0 border-0 bg-transparent"
                   ),
                 menu: () =>
                   classNames(
@@ -134,7 +148,7 @@ export const TimezoneSelectBlock = ({
               value={
                 event?.lockTimeZoneToggleOnBookingPage
                   ? event.lockedTimeZone || CURRENT_TIMEZONE
-                  : timezone
+                  : resolvedTimezone
               }
               onChange={({ value }) => {
                 setTimezone(value);
