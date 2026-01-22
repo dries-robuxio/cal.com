@@ -526,8 +526,11 @@ const BookerComponent = ({
                 "border-subtle rtl:border-default flex h-full w-full flex-col px-5 py-3 pb-0 rtl:border-r ltr:md:border-l",
                 // On mobile/embed: no overflow scrolling, let content flow naturally
                 isEmbed || layout === "mobile" ? "overflow-visible" : "overflow-x-auto",
+                // For MONTH_VIEW: add max-height to prevent overflow into footer
                 layout === BookerLayouts.MONTH_VIEW &&
-                  "h-full overflow-hidden md:w-(--booker-timeslots-width)",
+                  "overflow-hidden md:w-(--booker-timeslots-width)",
+                // On standalone pages (not embed), constrain height to prevent footer overlap
+                layout === BookerLayouts.MONTH_VIEW && !isEmbed && "max-h-[calc(100vh-300px)] md:max-h-[500px]",
                 layout !== BookerLayouts.MONTH_VIEW && !isEmbed && "sticky top-0"
               )}
               ref={timeslotsRef}
