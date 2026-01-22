@@ -220,8 +220,8 @@ export const AvailableTimeSlots = ({
       <div
         ref={containerRef}
         className={classNames(
-          // For embeds: no scrolling, content flows naturally. For non-embeds: normal scroll behavior
-          limitHeight && !isEmbed && "no-scrollbar grow overflow-auto md:h-[400px]",
+          // For embeds: no scrolling, content flows naturally. For non-embeds: constrained height with scroll
+          limitHeight && !isEmbed && "no-scrollbar grow overflow-auto max-h-[50vh] md:max-h-[400px]",
           limitHeight && isEmbed && "grow",
           !limitHeight && "flex h-full w-full flex-row gap-4",
           `${customClassNames?.availableTimeSlotsContainer}`
