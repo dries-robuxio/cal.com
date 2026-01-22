@@ -201,7 +201,7 @@ export const EventMeta = ({
               </EventMetaBlock>
             ) : null}
           </div>
-          {(event.description || translatedDescription) && (
+          {bookerState !== "booking" && (event.description || translatedDescription) && (
             <EventMetaBlock data-testid="event-meta-description" contentClassName="mb-8">
               <ScrollableWithGradients
                 className="wrap-break-word scroll-bar max-h-[280px] max-w-full overflow-y-auto pr-4 text-base leading-relaxed"
