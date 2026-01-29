@@ -21,7 +21,7 @@ const EmailScheduledBodyHeaderContent = (props: {
         <div
           data-testid="heading"
           style={{
-            fontFamily: "Roboto, Helvetica, sans-serif",
+            fontFamily: "'DM Sans', Helvetica, sans-serif",
             fontSize: 24,
             fontWeight: 700,
             lineHeight: "24px",
@@ -38,7 +38,7 @@ const EmailScheduledBodyHeaderContent = (props: {
           <div
             data-testid="subHeading"
             style={{
-              fontFamily: "Roboto, Helvetica, sans-serif",
+              fontFamily: "'DM Sans', Helvetica, sans-serif",
               fontSize: 16,
               fontWeight: 400,
               lineHeight: "24px",

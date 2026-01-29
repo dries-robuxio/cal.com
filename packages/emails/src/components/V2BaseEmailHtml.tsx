@@ -1,4 +1,6 @@
 /* eslint-disable @next/next/no-head-element */
+import { WEBAPP_URL } from "@calcom/lib/constants";
+
 import BaseTable from "./BaseTable";
 import EmailBodyLogo from "./EmailBodyLogo";
 import EmailHead from "./EmailHead";
@@ -31,19 +33,36 @@ export const V2BaseEmailHtml = (props: {
           <RawHtml
             html={`<!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" style="width:600px;" width="600" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->`}
           />
-          <div style={{ margin: "0px auto", maxWidth: 600 }}>
-            <Row align="center" border="0" style={{ width: "100%" }}>
+          {/* Robuxio Navy Header */}
+          <div
+            style={{
+              margin: "0px auto",
+              maxWidth: 600,
+              backgroundColor: "#002745",
+              borderRadius: "8px 8px 0 0",
+              marginTop: "40px",
+            }}>
+            <Row align="center" border="0" style={{ width: "100%", backgroundColor: "#002745" }}>
               <td
                 style={{
-                  direction: "ltr",
-                  fontSize: "0px",
-                  padding: "0px",
-                  paddingTop: "40px",
+                  padding: "20px 25px",
                   textAlign: "center",
                 }}>
-                <RawHtml
-                  html={`<!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr></tr></table><![endif]-->`}
-                />
+                <a href="https://robuxio.com" target="_blank" rel="noreferrer">
+                  <img
+                    src={`${WEBAPP_URL}/emails/robuxio-logo-white.png`}
+                    alt="Robuxio"
+                    height="32"
+                    style={{
+                      border: "0",
+                      display: "block",
+                      outline: "none",
+                      textDecoration: "none",
+                      height: "32px",
+                      margin: "0 auto",
+                    }}
+                  />
+                </a>
               </td>
             </Row>
           </div>
@@ -101,12 +120,12 @@ export const V2BaseEmailHtml = (props: {
                       }}>
                       <div
                         style={{
-                          fontFamily: "Roboto, Helvetica, sans-serif",
+                          fontFamily: "'DM Sans', Helvetica, sans-serif",
                           fontSize: 16,
                           fontWeight: 500,
                           lineHeight: 1,
                           textAlign: "left",
-                          color: "#3E3E3E",
+                          color: "#333333",
                         }}>
                         {props.children}
                       </div>
@@ -165,7 +184,7 @@ export const V2BaseEmailHtml = (props: {
                             style={{ fontSize: 0, padding: "10px 25px", wordBreak: "break-word" }}>
                             <div
                               style={{
-                                fontFamily: "Roboto, Helvetica, sans-serif",
+                                fontFamily: "'DM Sans', Helvetica, sans-serif",
                                 fontSize: 13,
                                 lineHeight: 1,
                                 textAlign: "left",

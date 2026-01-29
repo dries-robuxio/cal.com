@@ -1,13 +1,9 @@
-import { WEBAPP_URL } from "@calcom/lib/constants";
-
 import RawHtml from "./RawHtml";
 import Row from "./Row";
 
 const CommentIE = ({ html = "" }) => <RawHtml html={`<!--[if mso | IE]>${html}<![endif]-->`} />;
 
 const EmailBodyLogo = () => {
-  const image = `${WEBAPP_URL}/emails/logo.png`;
-
   return (
     <>
       <CommentIE
@@ -40,31 +36,34 @@ const EmailBodyLogo = () => {
                   align="center"
                   style={{
                     fontSize: "0px",
-                    padding: "10px 25px",
+                    padding: "24px 25px",
                     paddingTop: "32px",
                     wordBreak: "break-word",
+                    backgroundColor: "#f8f8f8",
+                    borderRadius: "0 0 8px 8px",
                   }}>
-                  <Row border="0" style={{ borderCollapse: "collapse", borderSpacing: "0px" }}>
-                    <td style={{ width: "89px" }}>
-                      <a href={WEBAPP_URL} target="_blank" rel="noreferrer">
-                        <img
-                          height="19"
-                          src={image}
-                          style={{
-                            border: "0",
-                            display: "block",
-                            outline: "none",
-                            textDecoration: "none",
-                            height: "19px",
-                            width: "100%",
-                            fontSize: "13px",
-                          }}
-                          width="89"
-                          alt=""
-                        />
+                  <div
+                    style={{
+                      fontFamily: "'DM Sans', Helvetica, sans-serif",
+                      fontSize: "12px",
+                      lineHeight: "1.6",
+                      textAlign: "center",
+                      color: "#777777",
+                    }}>
+                    <p style={{ margin: "0" }}>
+                      <a
+                        href="https://robuxio.com"
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: "#002745",
+                          textDecoration: "underline",
+                          fontWeight: 500,
+                        }}>
+                        Visit Our Website
                       </a>
-                    </td>
-                  </Row>
+                    </p>
+                  </div>
                 </td>
               </Row>
             </div>
