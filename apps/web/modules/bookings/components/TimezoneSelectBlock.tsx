@@ -88,6 +88,7 @@ export const TimezoneSelectBlock = ({
   const resolvedHelperText = helperText ?? t("timezone_search_hint");
   const resolvedLabelText = labelText ?? t("timezone_change_hint");
   const resolvedTimezone = timezone || CURRENT_TIMEZONE;
+  const menuPortalTarget = isProminent && typeof document !== "undefined" ? document.body : undefined;
 
   if (isProminent) {
     return (
@@ -108,7 +109,7 @@ export const TimezoneSelectBlock = ({
           <Icon name="chevrons-up-down" className="text-muted h-4 w-4" />
         </button>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="bg-default w-full max-w-[90vw] rounded-xl p-6 shadow-xl sm:max-w-[420px]">
+          <DialogContent className="sm:max-w-md">
             <div className="space-y-4">
               <div>
                 <p className="text-emphasis text-lg font-semibold">{t("change_timezone")}</p>
@@ -117,20 +118,21 @@ export const TimezoneSelectBlock = ({
               <TimezoneSelect
                 className="w-full"
                 timeZones={timeZones}
-                menuPosition="absolute"
+                menuPosition="fixed"
+                menuPortalTarget={menuPortalTarget}
                 placeholder={t("timezone_search_hint")}
                 size="md"
                 grow
                 classNames={{
                   control: () =>
                     "min-h-0! w-full border border-subtle bg-default rounded-md px-4 py-2 focus-within:ring-0 shadow-none!",
-                  menu: () => "w-full max-w-full",
+                  menu: () => "w-[320px] sm:w-[360px] max-w-[90vw]",
                   singleValue: () => "text-text py-1",
                   indicatorsContainer: () => "ml-auto",
                   container: () => "w-full max-w-full",
                   input: () => "text-emphasis h-6 w-full max-w-full text-base",
                   valueContainer: () => "text-emphasis placeholder:text-muted flex w-full gap-1",
-                  menuList: () => "max-h-[260px]",
+                  menuList: () => "max-h-[360px]",
                 }}
                 value={
                   event?.lockTimeZoneToggleOnBookingPage
@@ -184,7 +186,8 @@ export const TimezoneSelectBlock = ({
             <TimezoneSelect
               className={isProminent ? "w-full" : undefined}
               timeZones={timeZones}
-              menuPosition="absolute"
+              menuPosition={isProminent ? "fixed" : "absolute"}
+              menuPortalTarget={menuPortalTarget}
               timezoneSelectCustomClassname={timezoneSelectClassName}
               placeholder={t("timezone_search_hint")}
               size={isProminent ? "md" : "sm"}

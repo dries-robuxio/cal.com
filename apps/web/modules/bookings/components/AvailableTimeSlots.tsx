@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef } from "react";
 
 import dayjs from "@calcom/dayjs";
-import { useIsEmbed } from "@calcom/embed-core/embed-iframe";
 import { AvailableTimes, AvailableTimesSkeleton } from "@calcom/web/modules/bookings/components/AvailableTimes";
 import { useBookerStoreContext } from "@calcom/features/bookings/Booker/BookerStoreProvider";
 import type { IUseBookingLoadingStates } from "@calcom/features/bookings/Booker/components/hooks/useBookings";
@@ -77,7 +76,6 @@ export const AvailableTimeSlots = ({
   onAvailableTimeSlotSelect,
   ...props
 }: AvailableTimeSlotsProps) => {
-  const isEmbed = useIsEmbed();
   const selectedDate = useBookerStoreContext((state) => state.selectedDate);
 
   const setSeatedEventData = useBookerStoreContext((state) => state.setSeatedEventData);
@@ -220,9 +218,7 @@ export const AvailableTimeSlots = ({
       <div
         ref={containerRef}
         className={classNames(
-          // For embeds: no scrolling, content flows naturally. For non-embeds: constrained height with scroll
-          limitHeight && !isEmbed && "no-scrollbar grow overflow-auto max-h-[50vh] md:max-h-[400px]",
-          limitHeight && isEmbed && "grow",
+          limitHeight && "no-scrollbar grow overflow-auto md:h-[400px]",
           !limitHeight && "flex h-full w-full flex-row gap-4",
           `${customClassNames?.availableTimeSlotsContainer}`
         )}>
@@ -231,11 +227,7 @@ export const AvailableTimeSlots = ({
         {!isLoading &&
           slotsPerDay.length > 0 &&
           slotsPerDay.map((slots) => (
-            <div key={slots.date} className={classNames(
-              "h-full w-full",
-              // For embeds: no scrolling at all
-              isEmbed ? "overflow-visible" : "no-scrollbar overflow-x-hidden! overflow-y-auto"
-            )}>
+            <div key={slots.date} className="no-scrollbar overflow-x-hidden! h-full w-full overflow-y-auto">
               <AvailableTimes
                 className={customClassNames?.availableTimeSlotsContainer}
                 customClassNames={customClassNames?.availableTimes}
