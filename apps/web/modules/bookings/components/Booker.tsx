@@ -429,10 +429,11 @@ const BookerComponent = ({
                     event={event.data}
                     isPending={event.isPending}
                     isPlatform={isPlatform}
-                    isPrivateLink={!!hashedLink}
+                      isPrivateLink={!!hashedLink}
                       locale={userLocale}
                       timeZones={timeZones}
                       roundRobinHideOrgAndTeam={roundRobinHideOrgAndTeam}
+                      showTimezoneSelect={layout !== BookerLayouts.MONTH_VIEW}
                       hideEventTypeDetails={hideEventTypeDetails}>
                       {eventMetaChildren}
                     </EventMeta>

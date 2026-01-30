@@ -56,6 +56,7 @@ export const EventMeta = ({
   children,
   selectedTimeslot,
   roundRobinHideOrgAndTeam,
+  showTimezoneSelect = true,
   hideEventTypeDetails = false,
 }: {
   event?: Pick<
@@ -95,6 +96,7 @@ export const EventMeta = ({
   children?: React.ReactNode;
   selectedTimeslot: string | null;
   roundRobinHideOrgAndTeam?: boolean;
+  showTimezoneSelect?: boolean;
   hideEventTypeDetails?: boolean;
 }) => {
   const { timeFormat, timezone } = useBookerTime();
@@ -216,44 +218,46 @@ export const EventMeta = ({
               </EventMetaBlock>
             )}
             <EventDetails event={event} />
-            <EventMetaBlock
-              className="cursor-pointer [&_.current-timezone:before]:focus-within:opacity-100 [&_.current-timezone:before]:hover:opacity-100"
-              contentClassName="relative max-w-[90%]"
-              icon="globe">
-              {bookerState === "booking" ? (
-                <>{timezone}</>
-              ) : (
-                <span
-                  className={`current-timezone before:bg-subtle min-w-32 -mt-[2px] flex h-6 max-w-full items-center justify-start before:absolute before:inset-0 before:bottom-[-3px] before:left-[-30px] before:top-[-3px] before:w-[calc(100%+35px)] before:rounded-md before:py-3 before:opacity-0 before:transition-opacity ${
-                    event.lockTimeZoneToggleOnBookingPage ? "cursor-not-allowed" : ""
-                  }`}
-                  data-testid="event-meta-current-timezone">
-                  <TimezoneSelect
-                    timeZones={timeZones}
-                    menuPosition="absolute"
-                    timezoneSelectCustomClassname={classNames?.eventMetaTimezoneSelect}
-                    classNames={{
-                      control: () =>
-                        "min-h-0! p-0 w-full border-0 bg-transparent focus-within:ring-0 shadow-none!",
-                      menu: () => "w-64! max-w-[90vw] mb-1 ",
-                      singleValue: () => "text-text py-1",
-                      indicatorsContainer: () => "ml-auto",
-                      container: () => "max-w-full",
-                    }}
-                    value={
-                      event.lockTimeZoneToggleOnBookingPage
-                        ? event.lockedTimeZone || CURRENT_TIMEZONE
-                        : timezone
-                    }
-                    onChange={({ value }) => {
-                      setTimezone(value);
-                      setBookerStoreTimezone(value);
-                    }}
-                    isDisabled={event.lockTimeZoneToggleOnBookingPage}
-                  />
-                </span>
-              )}
-            </EventMetaBlock>
+            {showTimezoneSelect && (
+              <EventMetaBlock
+                className="cursor-pointer [&_.current-timezone:before]:focus-within:opacity-100 [&_.current-timezone:before]:hover:opacity-100"
+                contentClassName="relative max-w-[90%]"
+                icon="globe">
+                {bookerState === "booking" ? (
+                  <>{timezone}</>
+                ) : (
+                  <span
+                    className={`current-timezone before:bg-subtle min-w-32 -mt-[2px] flex h-6 max-w-full items-center justify-start before:absolute before:inset-0 before:bottom-[-3px] before:left-[-30px] before:top-[-3px] before:w-[calc(100%+35px)] before:rounded-md before:py-3 before:opacity-0 before:transition-opacity ${
+                      event.lockTimeZoneToggleOnBookingPage ? "cursor-not-allowed" : ""
+                    }`}
+                    data-testid="event-meta-current-timezone">
+                    <TimezoneSelect
+                      timeZones={timeZones}
+                      menuPosition="absolute"
+                      timezoneSelectCustomClassname={classNames?.eventMetaTimezoneSelect}
+                      classNames={{
+                        control: () =>
+                          "min-h-0! p-0 w-full border-0 bg-transparent focus-within:ring-0 shadow-none!",
+                        menu: () => "w-64! max-w-[90vw] mb-1 ",
+                        singleValue: () => "text-text py-1",
+                        indicatorsContainer: () => "ml-auto",
+                        container: () => "max-w-full",
+                      }}
+                      value={
+                        event.lockTimeZoneToggleOnBookingPage
+                          ? event.lockedTimeZone || CURRENT_TIMEZONE
+                          : timezone
+                      }
+                      onChange={({ value }) => {
+                        setTimezone(value);
+                        setBookerStoreTimezone(value);
+                      }}
+                      isDisabled={event.lockTimeZoneToggleOnBookingPage}
+                    />
+                  </span>
+                )}
+              </EventMetaBlock>
+            )}
             {bookerState === "booking" && eventTotalSeats && bookingSeatAttendeesQty ? (
               <EventMetaBlock icon="user" className={`${colorClass}`}>
                 <div className="text-bookinghighlight flex items-start text-sm">
