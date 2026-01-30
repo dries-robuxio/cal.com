@@ -430,13 +430,12 @@ const BookerComponent = ({
                     isPending={event.isPending}
                     isPlatform={isPlatform}
                     isPrivateLink={!!hashedLink}
-                    locale={userLocale}
-                    timeZones={timeZones}
-                    roundRobinHideOrgAndTeam={roundRobinHideOrgAndTeam}
-                    showTimezoneSelect={layout !== BookerLayouts.MONTH_VIEW}
-                    hideEventTypeDetails={hideEventTypeDetails}>
-                    {eventMetaChildren}
-                  </EventMeta>
+                      locale={userLocale}
+                      timeZones={timeZones}
+                      roundRobinHideOrgAndTeam={roundRobinHideOrgAndTeam}
+                      hideEventTypeDetails={hideEventTypeDetails}>
+                      {eventMetaChildren}
+                    </EventMeta>
                 )}
                 {layout !== BookerLayouts.MONTH_VIEW &&
                   !(layout === "mobile" && bookerState === "booking") && (
