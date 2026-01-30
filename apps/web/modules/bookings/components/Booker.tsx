@@ -38,7 +38,6 @@ import { OverlayCalendar } from "./OverlayCalendar/OverlayCalendar";
 import { RedirectToInstantMeetingModal } from "./RedirectToInstantMeetingModal";
 import { BookerSection } from "./Section";
 import { NotFound } from "./Unavailable";
-import { TimezoneSelectBlock } from "./TimezoneSelectBlock";
 import { useIsQuickAvailabilityCheckFeatureEnabled } from "@calcom/features/bookings/Booker/components/hooks/useIsQuickAvailabilityCheckFeatureEnabled";
 import { fadeInLeft, getBookerSizeClassNames, useBookerResizeAnimation } from "@calcom/features/bookings/Booker/config";
 import framerFeatures from "@calcom/features/bookings/Booker/framer-features";
@@ -433,7 +432,6 @@ const BookerComponent = ({
                     locale={userLocale}
                     timeZones={timeZones}
                     roundRobinHideOrgAndTeam={roundRobinHideOrgAndTeam}
-                    showTimezoneSelect={layout !== BookerLayouts.MONTH_VIEW}
                     hideEventTypeDetails={hideEventTypeDetails}>
                     {eventMetaChildren}
                   </EventMeta>
@@ -478,22 +476,6 @@ const BookerComponent = ({
                 scrollToTimeSlots={scrollToTimeSlots}
                 showNoAvailabilityDialog={showNoAvailabilityDialog}
               />
-              {layout === BookerLayouts.MONTH_VIEW && !hideEventTypeDetails && (
-                <div className="mt-6">
-                  <TimezoneSelectBlock
-                    event={event.data}
-                    isPlatform={isPlatform}
-                    timeZones={timeZones}
-                    timezoneSelectClassName={
-                      customClassNames?.eventMetaCustomClassNames?.eventMetaTimezoneSelect
-                    }
-                    showLabel
-                    showHelperText
-                    isProminent
-                    showIcon={false}
-                  />
-                </div>
-              )}
             </BookerSection>
 
             <BookerSection

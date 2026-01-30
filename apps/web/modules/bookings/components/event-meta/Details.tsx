@@ -85,7 +85,7 @@ export const EventMetaBlock = ({
   return (
     <div
       className={classNames(
-        "flex items-start justify-start text-base",
+        "flex items-start justify-start text-sm",
         highlight ? "text-emphasis" : "text-text",
         className
       )}
