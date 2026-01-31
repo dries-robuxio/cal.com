@@ -1,16 +1,19 @@
-import { useEffect, useMemo } from "react";
-import dynamic from "next/dynamic";
 import { shallow } from "zustand/shallow";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
 
 import { Timezone as PlatformTimezoneSelect } from "@calcom/atoms/timezone";
+import { Dialog } from "@calcom/features/components/controlled-dialog";
 import { useBookerStoreContext } from "@calcom/features/bookings/Booker/BookerStoreProvider";
 import { useBookerTime } from "@calcom/features/bookings/Booker/components/hooks/useBookerTime";
 import type { Timezone } from "@calcom/features/bookings/Booker/types";
 import type { BookerEvent } from "@calcom/features/bookings/types";
 import { useTimePreferences } from "@calcom/features/bookings/lib";
-import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { CURRENT_TIMEZONE } from "@calcom/lib/timezoneConstants";
+import { useLocale } from "@calcom/lib/hooks/useLocale";
 import classNames from "@calcom/ui/classNames";
+import { DialogContent } from "@calcom/ui/components/dialog";
+import { Icon } from "@calcom/ui/components/icon";
 
 import { EventMetaBlock } from "./event-meta/Details";
 
@@ -31,6 +34,11 @@ type TimezoneSelectBlockProps = {
   showLabel?: boolean;
   labelClassName?: string;
   showIcon?: boolean;
+  showHelperText?: boolean;
+  helperText?: string;
+  helperClassName?: string;
+  isProminent?: boolean;
+  labelText?: string;
 };
 
 export const TimezoneSelectBlock = ({
@@ -43,12 +51,18 @@ export const TimezoneSelectBlock = ({
   showLabel = false,
   labelClassName,
   showIcon = true,
+  showHelperText = false,
+  helperText,
+  helperClassName,
+  isProminent = false,
+  labelText,
 }: TimezoneSelectBlockProps) => {
   const { timezone } = useBookerTime();
   const [setTimezone] = useTimePreferences((state) => [state.setTimezone]);
   const [setBookerStoreTimezone] = useBookerStoreContext((state) => [state.setTimezone], shallow);
   const bookerState = useBookerStoreContext((state) => state.state);
   const { t } = useLocale();
+  const [isOpen, setIsOpen] = useState(false);
   const [TimezoneSelect] = useMemo(
     () => (isPlatform ? [PlatformTimezoneSelect] : [WebTimezoneSelect]),
     [isPlatform]
@@ -59,26 +73,107 @@ export const TimezoneSelectBlock = ({
       const lockedTimezone = event.lockedTimeZone || event.schedule?.timeZone;
       if (lockedTimezone) {
         setTimezone(lockedTimezone);
+        setBookerStoreTimezone(lockedTimezone);
       }
     }
-  }, [event, setTimezone]);
+  }, [event, setBookerStoreTimezone, setTimezone]);
+
+  useEffect(() => {
+    if (!event?.lockTimeZoneToggleOnBookingPage && !timezone) {
+      setTimezone(CURRENT_TIMEZONE);
+      setBookerStoreTimezone(CURRENT_TIMEZONE);
+    }
+  }, [event?.lockTimeZoneToggleOnBookingPage, setBookerStoreTimezone, setTimezone, timezone]);
+
+  const resolvedHelperText = helperText ?? t("timezone_search_hint");
+  const resolvedLabelText = labelText ?? t("timezone_change_hint");
+  const resolvedTimezone = timezone || CURRENT_TIMEZONE;
+
+  if (isProminent) {
+    return (
+      <div>
+        {showLabel && (
+          <p className={classNames("text-subtle mb-2 text-sm font-medium", labelClassName)}>
+            {resolvedLabelText}
+          </p>
+        )}
+        {showHelperText && (
+          <p className={classNames("text-muted mb-3 text-sm", helperClassName)}>{resolvedHelperText}</p>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="text-text border-subtle hover:border-emphasis flex w-full items-center justify-between rounded-md border bg-default px-4 py-3 text-sm transition-colors">
+          <span className="font-medium">{resolvedTimezone}</span>
+          <Icon name="chevrons-up-down" className="text-muted h-4 w-4" />
+        </button>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="bg-default w-full max-w-[90vw] rounded-xl p-6 shadow-xl sm:max-w-[420px]">
+            <div className="space-y-4">
+              <div>
+                <p className="text-emphasis text-lg font-semibold">{t("change_timezone")}</p>
+                <p className="text-muted mt-1 text-sm">{resolvedHelperText}</p>
+              </div>
+              <TimezoneSelect
+                className="w-full"
+                timeZones={timeZones}
+                menuPosition="absolute"
+                placeholder={t("timezone_search_hint")}
+                size="md"
+                grow
+                classNames={{
+                  control: () =>
+                    "min-h-0! w-full border border-subtle bg-default rounded-md px-4 py-2 focus-within:ring-0 shadow-none!",
+                  menu: () => "w-full max-w-full",
+                  singleValue: () => "text-text py-1",
+                  indicatorsContainer: () => "ml-auto",
+                  container: () => "w-full max-w-full",
+                  input: () => "text-emphasis h-6 w-full max-w-full text-base",
+                  valueContainer: () => "text-emphasis placeholder:text-muted flex w-full gap-1",
+                  menuList: () => "max-h-[260px]",
+                }}
+                value={
+                  event?.lockTimeZoneToggleOnBookingPage
+                    ? event.lockedTimeZone || CURRENT_TIMEZONE
+                    : resolvedTimezone
+                }
+                onChange={({ value }) => {
+                  setTimezone(value);
+                  setBookerStoreTimezone(value);
+                  setIsOpen(false);
+                }}
+                isDisabled={event?.lockTimeZoneToggleOnBookingPage}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
 
   return (
     <div>
       {showLabel && (
         <p className={classNames("text-subtle mb-2 text-sm font-medium", labelClassName)}>
-          {t("timezone")}
+          {resolvedLabelText}
         </p>
+      )}
+      {showHelperText && (
+        <p className={classNames("text-muted mb-3 text-sm", helperClassName)}>{resolvedHelperText}</p>
       )}
       <EventMetaBlock
         className={classNames(
           "cursor-pointer [&_.current-timezone:before]:focus-within:opacity-100 [&_.current-timezone:before]:hover:opacity-100",
           className
         )}
-        contentClassName={classNames("relative max-w-[90%]", contentClassName)}
+        contentClassName={classNames(
+          "relative",
+          isProminent ? "w-full max-w-full" : "max-w-[90%]",
+          contentClassName
+        )}
         icon={showIcon ? "globe" : undefined}>
         {bookerState === "booking" ? (
-          <>{timezone}</>
+          <>{resolvedTimezone}</>
         ) : (
           <span
             className={classNames(
@@ -87,21 +182,37 @@ export const TimezoneSelectBlock = ({
             )}
             data-testid="event-meta-current-timezone">
             <TimezoneSelect
+              className={isProminent ? "w-full" : undefined}
               timeZones={timeZones}
               menuPosition="absolute"
               timezoneSelectCustomClassname={timezoneSelectClassName}
+              placeholder={t("timezone_search_hint")}
+              size={isProminent ? "md" : "sm"}
+              grow={isProminent}
               classNames={{
                 control: () =>
-                  "min-h-0! p-0 w-full border-0 bg-transparent focus-within:ring-0 shadow-none!",
-                menu: () => "w-64! max-w-[90vw] mb-1 ",
+                  classNames(
+                    "min-h-0! w-full focus-within:ring-0 shadow-none!",
+                    isProminent
+                      ? "h-11 px-4 border border-subtle bg-default rounded-md"
+                      : "p-0 border-0 bg-transparent"
+                  ),
+                menu: () =>
+                  classNames(
+                    "mb-1",
+                    isProminent ? "w-[320px] sm:w-[360px] max-w-[90vw]" : "w-64! max-w-[90vw]"
+                  ),
                 singleValue: () => "text-text py-1",
                 indicatorsContainer: () => "ml-auto",
-                container: () => "max-w-full",
+                container: () => "w-full max-w-full",
+                input: () => classNames("text-emphasis h-6 w-full max-w-full", isProminent && "text-base"),
+                valueContainer: () => "text-emphasis placeholder:text-muted flex w-full gap-1",
+                menuList: () => classNames("max-h-[280px]", isProminent && "max-h-[320px]"),
               }}
               value={
                 event?.lockTimeZoneToggleOnBookingPage
                   ? event.lockedTimeZone || CURRENT_TIMEZONE
-                  : timezone
+                  : resolvedTimezone
               }
               onChange={({ value }) => {
                 setTimezone(value);
