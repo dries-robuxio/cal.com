@@ -112,7 +112,6 @@ export const TimezoneSelectBlock = ({
             <div className="space-y-4">
               <div>
                 <p className="text-emphasis text-lg font-semibold">{t("change_timezone")}</p>
-                <p className="text-muted mt-1 text-sm">{resolvedHelperText}</p>
               </div>
               <TimezoneSelect
                 className="w-full"

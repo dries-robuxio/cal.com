@@ -3,7 +3,7 @@ import classNames from "@calcom/ui/classNames";
 import { Avatar } from "./Avatar";
 
 export type AvatarGroupProps = {
-  size: "sm" | "lg";
+  size: "sm" | "md" | "lg";
   items: {
     image: string;
     title?: string;
@@ -46,12 +46,12 @@ export const AvatarGroup = function AvatarGroup(props: AvatarGroupProps) {
         <li
           className={classNames(
             "bg-inverted relative -mr-1 inline-flex justify-center  overflow-hidden rounded-full",
-            props.size === "sm" ? "min-w-6 h-6" : "min-w-16 h-16"
+            props.size === "sm" ? "min-w-6 h-6" : props.size === "md" ? "min-w-8 h-8" : "min-w-16 h-16"
           )}>
           <span
             className={classNames(
               " text-inverted m-auto flex h-full w-full items-center justify-center text-center",
-              props.size === "sm" ? "text-[12px]" : "text-2xl"
+              props.size === "sm" ? "text-[12px]" : props.size === "md" ? "text-sm" : "text-2xl"
             )}>
             +{props.hideTruncatedAvatarsCount ? null : numTruncatedAvatars}
           </span>

@@ -46,6 +46,23 @@ export const EventMembers = ({
     return <div className="h-6" />;
   }
 
+  const getEventMemberAvatarUrl = (user: BookerEvent["subsetOfUsers"][number]) => {
+    if (user.avatarUrl) {
+      return getUserAvatarUrl(user);
+    }
+
+    if (user.username) {
+      const normalizedBookerUrl = user.bookerUrl.replace(/\/$/, "");
+      return `${normalizedBookerUrl}/${user.username}/avatar.png`;
+    }
+
+    if (user.profile?.image) {
+      return user.profile.image;
+    }
+
+    return getUserAvatarUrl(undefined);
+  };
+
   const orgOrTeamAvatarItem =
     isDynamic || (!profile.image && !entity.logoUrl) || !entity.teamSlug
       ? []
@@ -67,7 +84,7 @@ export const EventMembers = ({
   return (
     <>
       <AvatarGroup
-        size="sm"
+        size="md"
         className="border-muted"
         items={[
           ...orgOrTeamAvatarItem,
@@ -80,7 +97,7 @@ export const EventMembers = ({
                   }?redirect=false`,
             alt: user.name || "",
             title: user.name || "",
-            image: getUserAvatarUrl(user),
+            image: getEventMemberAvatarUrl(user),
           })),
         ]}
       />

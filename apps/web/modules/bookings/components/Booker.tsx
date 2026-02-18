@@ -494,7 +494,6 @@ const BookerComponent = ({
                       customClassNames?.eventMetaCustomClassNames?.eventMetaTimezoneSelect
                     }
                     showLabel
-                    showHelperText
                     isProminent
                     showIcon={false}
                   />
