@@ -46,6 +46,8 @@ export const EventMembers = ({
     return <div className="h-6" />;
   }
 
+  const toImageUrl = (value: unknown): string => (typeof value === "string" ? value : "");
+
   const getEventMemberAvatarUrl = (user: BookerEvent["subsetOfUsers"][number]) => {
     if (user.avatarUrl) {
       return getUserAvatarUrl(user);
@@ -56,15 +58,18 @@ export const EventMembers = ({
       return `${normalizedBookerUrl}/${user.username}/avatar.png`;
     }
 
-    if (user.profile && "image" in user.profile && user.profile.image) {
-      return user.profile.image;
+    if (user.profile && "image" in user.profile) {
+      const profileImage = toImageUrl(user.profile.image);
+      if (profileImage) {
+        return profileImage;
+      }
     }
 
     return getUserAvatarUrl(undefined);
   };
 
   const orgOrTeamAvatarItem =
-    isDynamic || (!profile.image && !entity.logoUrl) || !entity.teamSlug
+    isDynamic || (!toImageUrl(profile.image) && !toImageUrl(entity.logoUrl)) || !entity.teamSlug
       ? []
       : [
           {
@@ -75,7 +80,7 @@ export const EventMembers = ({
                 : entity.teamSlug
                 ? getTeamUrlSync({ orgSlug: entity.orgSlug, teamSlug: entity.teamSlug })
                 : getBookerBaseUrlSync(entity.orgSlug),
-            image: entity.logoUrl ?? profile.image ?? "",
+            image: toImageUrl(entity.logoUrl) || toImageUrl(profile.image),
             alt: entity.name ?? profile.name ?? "",
             title: entity.name ?? profile.name ?? "",
           },
