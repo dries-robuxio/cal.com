@@ -56,7 +56,7 @@ export const EventMembers = ({
       return `${normalizedBookerUrl}/${user.username}/avatar.png`;
     }
 
-    if (user.profile?.image) {
+    if (user.profile && "image" in user.profile && user.profile.image) {
       return user.profile.image;
     }
 
