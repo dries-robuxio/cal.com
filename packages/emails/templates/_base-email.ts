@@ -10,6 +10,7 @@ import { getServerErrorFromUnknown } from "@calcom/lib/server/getServerErrorFrom
 import { setTestEmail } from "@calcom/lib/testEmails";
 import { prisma } from "@calcom/prisma";
 
+import { waitForEmailRateLimit } from "../lib/emailRateLimiter";
 import { sanitizeDisplayName } from "../lib/sanitizeDisplayName";
 
 // Initialize Resend client if API key is available
@@ -67,6 +68,8 @@ export default class BaseEmail {
 
     const parseSubject = z.string().safeParse(payload?.subject);
     const subject = parseSubject.success ? decodeHTML(parseSubject.data) : "";
+
+    await waitForEmailRateLimit();
 
     // Use Resend HTTP API if available (bypasses SMTP blocking)
     if (resendClient) {
