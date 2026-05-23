@@ -117,6 +117,7 @@ const scheduleEmailReminderForEvt = async (args: scheduleEmailReminderArgs & { e
     includeCalendarEvent,
     action,
     isOrganization,
+    verifiedAt,
   } = args;
 
   const uid = evt.uid as string;
@@ -142,7 +143,7 @@ const scheduleEmailReminderForEvt = async (args: scheduleEmailReminderArgs & { e
     template,
     includeCalendarEvent,
     triggerEvent,
-    isOrganization,
+    allowCloakedLinks: isOrganization || Boolean(verifiedAt),
   });
 
   await sendOrScheduleWorkflowEmailWithReminder({
@@ -172,6 +173,7 @@ const scheduleEmailReminderForForm = async (
     emailBody = "",
     hideBranding,
     isOrganization,
+    verifiedAt,
   } = args;
 
   const emailContent = {
@@ -200,11 +202,10 @@ const scheduleEmailReminderForForm = async (
   // Allows debugging generated email content without waiting for sendgrid to send emails
   log.debug(`Sending Email for trigger ${triggerEvent}`, JSON.stringify(emailContent));
 
-  // Organization accounts are allowed to use cloaked links (URL behind text)
-  // since they are paid accounts with lower spam/scam risk
-  const processedEmailBody = isOrganization
-    ? emailContent.emailBody
-    : replaceCloakedLinksInHtml(emailContent.emailBody);
+  const processedEmailBody =
+    isOrganization || Boolean(verifiedAt)
+      ? emailContent.emailBody
+      : replaceCloakedLinksInHtml(emailContent.emailBody);
 
   const mailData = {
     subject: emailContent.emailSubject,

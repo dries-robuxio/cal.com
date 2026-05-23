@@ -1,5 +1,3 @@
-import { describe, expect, vi, beforeEach, test } from "vitest";
-
 import type { BookingSeatRepository } from "@calcom/features/bookings/repositories/BookingSeatRepository";
 import type { WorkflowReminderRepository } from "@calcom/features/ee/workflows/repositories/WorkflowReminderRepository";
 import {
@@ -10,6 +8,7 @@ import {
   WorkflowTriggerEvents,
 } from "@calcom/prisma/enums";
 import type { CalendarEvent } from "@calcom/types/Calendar";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { EmailWorkflowService } from "./EmailWorkflowService";
 
@@ -580,6 +579,54 @@ describe("EmailWorkflowService", () => {
       });
 
       expect(result.attachments).toBeUndefined();
+    });
+
+    test("should keep labeled links for trusted workflow senders", async () => {
+      const result = await emailWorkflowService.generateEmailPayloadForEvtWorkflow({
+        evt: {
+          ...mockBookingInfo,
+          videoCallData: {
+            type: "google_video",
+            url: "https://meet.google.com/abc-defg-hij",
+          },
+        },
+        sendTo: ["attendee@example.com"],
+        hideBranding: false,
+        emailSubject: "Test Subject",
+        emailBody: '<a href="{MEETING_URL}">Join meeting</a>',
+        sender: "Cal.com",
+        action: WorkflowActions.EMAIL_ATTENDEE,
+        template: WorkflowTemplates.CUSTOM,
+        includeCalendarEvent: false,
+        triggerEvent: WorkflowTriggerEvents.BEFORE_EVENT,
+        allowCloakedLinks: true,
+      });
+
+      expect(result.html).toContain(">Join meeting</a>");
+    });
+
+    test("should expose raw URLs for untrusted workflow senders", async () => {
+      const result = await emailWorkflowService.generateEmailPayloadForEvtWorkflow({
+        evt: {
+          ...mockBookingInfo,
+          videoCallData: {
+            type: "google_video",
+            url: "https://meet.google.com/abc-defg-hij",
+          },
+        },
+        sendTo: ["attendee@example.com"],
+        hideBranding: false,
+        emailSubject: "Test Subject",
+        emailBody: '<a href="{MEETING_URL}">Join meeting</a>',
+        sender: "Cal.com",
+        action: WorkflowActions.EMAIL_ATTENDEE,
+        template: WorkflowTemplates.CUSTOM,
+        includeCalendarEvent: false,
+        triggerEvent: WorkflowTriggerEvents.BEFORE_EVENT,
+        allowCloakedLinks: false,
+      });
+
+      expect(result.html).toContain(">https://meet.google.com/abc-defg-hij</a>");
     });
   });
 });

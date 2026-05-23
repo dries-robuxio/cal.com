@@ -355,10 +355,10 @@ export async function handler(req: NextRequest) {
             title: booking.title || booking.eventType?.title || "",
           };
 
-          // Organization accounts are allowed to use cloaked links (URL behind text)
-          // since they are paid accounts with lower spam/scam risk
-          const isOrganization = reminder.workflowStep?.workflow?.team?.isOrganization ?? false;
-          const processedEmailBody = isOrganization
+          const allowCloakedLinks =
+            (reminder.workflowStep?.workflow?.team?.isOrganization ?? false) ||
+            Boolean(reminder.workflowStep?.verifiedAt);
+          const processedEmailBody = allowCloakedLinks
             ? emailContent.emailBody
             : replaceCloakedLinksInHtml(emailContent.emailBody);
 
@@ -461,10 +461,10 @@ export async function handler(req: NextRequest) {
         if (emailContent.emailSubject.length > 0 && !emailBodyEmpty && sendTo) {
           const batchId = isSendgridEnabled ? await getBatchId() : undefined;
 
-          // Organization accounts are allowed to use cloaked links (URL behind text)
-          // since they are paid accounts with lower spam/scam risk
-          const isOrganization = reminder.workflowStep?.workflow?.team?.isOrganization ?? false;
-          const processedEmailBody = isOrganization
+          const allowCloakedLinks =
+            (reminder.workflowStep?.workflow?.team?.isOrganization ?? false) ||
+            Boolean(reminder.workflowStep?.verifiedAt);
+          const processedEmailBody = allowCloakedLinks
             ? emailContent.emailBody
             : replaceCloakedLinksInHtml(emailContent.emailBody);
 
