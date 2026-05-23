@@ -1,25 +1,86 @@
-import { decodeHTML } from "entities";
-import { Resend } from "resend";
-import { z } from "zod";
-
+import { Buffer } from "node:buffer";
+import process from "node:process";
 import dayjs from "@calcom/dayjs";
 import { FeaturesRepository } from "@calcom/features/flags/features.repository";
 import isSmsCalEmail from "@calcom/lib/isSmsCalEmail";
-import { serverConfig } from "@calcom/lib/serverConfig";
 import { getServerErrorFromUnknown } from "@calcom/lib/server/getServerErrorFromUnknown";
+import { serverConfig } from "@calcom/lib/serverConfig";
 import { setTestEmail } from "@calcom/lib/testEmails";
 import { prisma } from "@calcom/prisma";
-
+import { decodeHTML } from "entities";
+import { Resend } from "resend";
+import { z } from "zod";
 import { waitForEmailRateLimit } from "../lib/emailRateLimiter";
 import { sanitizeDisplayName } from "../lib/sanitizeDisplayName";
 
 // Initialize Resend client if API key is available
-const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resendClient: Resend | null = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+
+type ResendEmailPayload = Parameters<Resend["emails"]["send"]>[0];
+type ResendAttachment = NonNullable<ResendEmailPayload["attachments"]>[number];
+
+const buildResendAttachment = (attachment: Record<string, unknown>): ResendAttachment[] => {
+  const { filename, content, path, contentType } = attachment;
+
+  if (typeof filename !== "string") return [];
+
+  const resendAttachmentContentType = typeof contentType === "string" ? { contentType } : {};
+
+  if (Buffer.isBuffer(content)) {
+    return [{ filename, content, ...resendAttachmentContentType }];
+  }
+
+  if (typeof content === "string") {
+    return [{ filename, content: Buffer.from(content), ...resendAttachmentContentType }];
+  }
+
+  if (typeof path === "string") {
+    return [{ filename, path, ...resendAttachmentContentType }];
+  }
+
+  return [];
+};
+
+const getResendAttachments = (payload: Record<string, unknown>): ResendEmailPayload["attachments"] => {
+  const attachments: ResendAttachment[] = [];
+
+  if (Array.isArray(payload.attachments)) {
+    attachments.push(
+      ...payload.attachments.flatMap((attachment): ResendAttachment[] => {
+        if (!attachment || typeof attachment !== "object") return [];
+
+        return buildResendAttachment(attachment as Record<string, unknown>);
+      })
+    );
+  }
+
+  if (payload.icalEvent && typeof payload.icalEvent === "object") {
+    const icalEvent = payload.icalEvent as Record<string, unknown>;
+    const method = typeof icalEvent.method === "string" ? icalEvent.method : "REQUEST";
+
+    attachments.push(
+      ...buildResendAttachment({
+        ...icalEvent,
+        filename: typeof icalEvent.filename === "string" ? icalEvent.filename : "event.ics",
+        contentType:
+          typeof icalEvent.contentType === "string"
+            ? icalEvent.contentType
+            : `text/calendar; charset=UTF-8; method=${method}`,
+      })
+    );
+  }
+
+  if (attachments.length === 0) return undefined;
+
+  return attachments;
+};
 
 export default class BaseEmail {
   name = "";
 
-  protected getTimezone() {
+  protected getTimezone(): string {
     return "";
   }
 
@@ -27,14 +88,14 @@ export default class BaseEmail {
     return "";
   }
 
-  protected getFormattedRecipientTime({ time, format }: { time: string; format: string }) {
+  protected getFormattedRecipientTime({ time, format }: { time: string; format: string }): string {
     return dayjs(time).tz(this.getTimezone()).locale(this.getLocale()).format(format);
   }
 
   protected async getNodeMailerPayload(): Promise<Record<string, unknown>> {
     return {};
   }
-  public async sendEmail() {
+  public async sendEmail(): Promise<unknown> {
     const featuresRepository = new FeaturesRepository(prisma);
     const emailsDisabled = await featuresRepository.checkIfFeatureIsEnabledGlobally("emails");
     /** If email kill switch exists and is active, we prevent emails being sent. */
@@ -76,6 +137,7 @@ export default class BaseEmail {
       try {
         const html = "html" in payload ? (payload.html as string) : "";
         const text = "text" in payload ? (payload.text as string) : undefined;
+        const attachments = getResendAttachments(payload);
 
         await resendClient.emails.send({
           from: sanitizedFrom,
@@ -83,6 +145,7 @@ export default class BaseEmail {
           subject,
           html,
           text,
+          attachments,
         });
         console.log(`Email sent via Resend HTTP API to: ${sanitizedTo}`);
         return new Promise((resolve) => resolve("send mail via resend"));

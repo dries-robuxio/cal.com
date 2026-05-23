@@ -18,7 +18,7 @@ describe("waitForEmailRateLimit", () => {
     await expect(waitForEmailRateLimit()).resolves.toBeUndefined();
   });
 
-  it("spaces concurrent email sends one second apart", async () => {
+  it("spaces concurrent email sends five seconds apart", async () => {
     const firstSend = waitForEmailRateLimit();
     const secondSend = waitForEmailRateLimit();
     const thirdSend = waitForEmailRateLimit();
@@ -30,7 +30,7 @@ describe("waitForEmailRateLimit", () => {
       secondSendResolved = true;
     });
 
-    await vi.advanceTimersByTimeAsync(999);
+    await vi.advanceTimersByTimeAsync(4999);
     expect(secondSendResolved).toBe(false);
 
     await vi.advanceTimersByTimeAsync(1);
@@ -41,10 +41,30 @@ describe("waitForEmailRateLimit", () => {
       thirdSendResolved = true;
     });
 
-    await vi.advanceTimersByTimeAsync(999);
+    await vi.advanceTimersByTimeAsync(4999);
     expect(thirdSendResolved).toBe(false);
 
     await vi.advanceTimersByTimeAsync(1);
     await expect(thirdSend).resolves.toBeUndefined();
+  });
+
+  it("allows the send interval to be configured", async () => {
+    vi.stubEnv("EMAIL_SEND_INTERVAL_MS", "2500");
+
+    const firstSend = waitForEmailRateLimit();
+    const secondSend = waitForEmailRateLimit();
+
+    await expect(firstSend).resolves.toBeUndefined();
+
+    let secondSendResolved = false;
+    void secondSend.then(() => {
+      secondSendResolved = true;
+    });
+
+    await vi.advanceTimersByTimeAsync(2499);
+    expect(secondSendResolved).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(secondSend).resolves.toBeUndefined();
   });
 });
