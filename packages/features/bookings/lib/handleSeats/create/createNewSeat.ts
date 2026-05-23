@@ -1,25 +1,25 @@
- 
-import { cloneDeep } from "lodash";
-import { uuid } from "short-uuid";
-
 import { eventTypeAppMetadataOptionalSchema } from "@calcom/app-store/zod-utils";
 import { sendScheduledSeatsEmailsAndSMS } from "@calcom/emails/email-manager";
+import EventManager from "@calcom/features/bookings/lib/EventManager";
 import { refreshCredentials } from "@calcom/features/bookings/lib/getAllCredentialsForUsersOnEvent/refreshCredentials";
 import { handlePayment } from "@calcom/features/bookings/lib/handlePayment";
 import {
   allowDisablingAttendeeConfirmationEmails,
   allowDisablingHostConfirmationEmails,
+  hasAttendeeNewEventEmailWorkflow,
+  hasHostNewEventEmailWorkflow,
 } from "@calcom/features/ee/workflows/lib/allowDisablingStandardEmails";
-import EventManager from "@calcom/features/bookings/lib/EventManager";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { HttpError } from "@calcom/lib/http-error";
 import prisma from "@calcom/prisma";
 import type { Prisma } from "@calcom/prisma/client";
 import { BookingStatus } from "@calcom/prisma/enums";
+import { cloneDeep } from "lodash";
+import { uuid } from "short-uuid";
 
 import { findBookingQuery } from "../../handleNewBooking/findBookingQuery";
 import type { IEventTypePaymentCredentialType } from "../../handleNewBooking/types";
-import type { SeatedBooking, NewSeatedBookingObject, HandleSeatsResultBooking } from "../types";
+import type { HandleSeatsResultBooking, NewSeatedBookingObject, SeatedBooking } from "../types";
 
 const createNewSeat = async (
   rescheduleSeatedBookingObject: NewSeatedBookingObject,
@@ -129,16 +129,22 @@ const createNewSeat = async (
   if (noEmail !== true) {
     let isHostConfirmationEmailsDisabled = false;
     let isAttendeeConfirmationEmailDisabled = false;
+    const hasHostReplacementEmail = hasHostNewEventEmailWorkflow(workflows);
+    const hasAttendeeReplacementEmail = hasAttendeeNewEventEmailWorkflow(workflows);
 
     isHostConfirmationEmailsDisabled = eventType.metadata?.disableStandardEmails?.confirmation?.host || false;
     isAttendeeConfirmationEmailDisabled =
       eventType.metadata?.disableStandardEmails?.confirmation?.attendee || false;
 
-    if (isHostConfirmationEmailsDisabled) {
+    if (hasHostReplacementEmail) {
+      isHostConfirmationEmailsDisabled = true;
+    } else if (isHostConfirmationEmailsDisabled) {
       isHostConfirmationEmailsDisabled = allowDisablingHostConfirmationEmails(workflows);
     }
 
-    if (isAttendeeConfirmationEmailDisabled) {
+    if (hasAttendeeReplacementEmail) {
+      isAttendeeConfirmationEmailDisabled = true;
+    } else if (isAttendeeConfirmationEmailDisabled) {
       isAttendeeConfirmationEmailDisabled = allowDisablingAttendeeConfirmationEmails(workflows);
     }
     await sendScheduledSeatsEmailsAndSMS(

@@ -1,16 +1,16 @@
+import { SENDER_NAME } from "@calcom/lib/constants";
 import { JSDOM } from "jsdom";
 
-import { SENDER_NAME } from "@calcom/lib/constants";
-
+import renderEmail from "../src/renderEmail";
 import BaseEmail from "./_base-email";
 
-export type Attachment = {
+type Attachment = {
   content: string;
   filename: string;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
-export type WorkflowEmailData = {
+type WorkflowEmailData = {
   to: string;
   subject: string;
   html: string;
@@ -19,7 +19,7 @@ export type WorkflowEmailData = {
   attachments?: Attachment[];
 };
 
-export default class WorkflowEmail extends BaseEmail {
+class WorkflowEmail extends BaseEmail {
   mailData: WorkflowEmailData;
 
   constructor(mailData: WorkflowEmailData) {
@@ -33,13 +33,29 @@ export default class WorkflowEmail extends BaseEmail {
       from: `${this.mailData.sender || SENDER_NAME} <${this.getMailerOptions().from}>`,
       ...(this.mailData.replyTo && { replyTo: this.mailData.replyTo }),
       subject: this.mailData.subject,
-      html: addHTMLStyles(this.mailData.html),
+      html: await buildWorkflowEmailHtml({
+        subject: this.mailData.subject,
+        html: this.mailData.html,
+      }),
       attachments: this.mailData.attachments,
     };
   }
 }
 
-export function addHTMLStyles(html?: string) {
+async function buildWorkflowEmailHtml({
+  subject,
+  html,
+}: {
+  subject: string;
+  html?: string;
+}): Promise<string> {
+  return await renderEmail("WorkflowEmail", {
+    subject,
+    html: extractBodyHtml(addHTMLStyles(html)),
+  });
+}
+
+function addHTMLStyles(html?: string): string {
   if (!html) {
     return "";
   }
@@ -54,3 +70,12 @@ export function addHTMLStyles(html?: string) {
 
   return dom.serialize();
 }
+
+function extractBodyHtml(html: string): string {
+  const dom = new JSDOM(html);
+  return dom.window.document.body.innerHTML;
+}
+
+export { addHTMLStyles, buildWorkflowEmailHtml };
+export type { Attachment, WorkflowEmailData };
+export default WorkflowEmail;

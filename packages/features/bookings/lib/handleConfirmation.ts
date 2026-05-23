@@ -1,16 +1,18 @@
 import { eventTypeAppMetadataOptionalSchema } from "@calcom/app-store/zod-utils";
-import { scheduleMandatoryReminder } from "@calcom/ee/workflows/lib/reminders/scheduleMandatoryReminder";
 import { sendScheduledEmailsAndSMS } from "@calcom/emails/email-manager";
 import type { Actor } from "@calcom/features/booking-audit/lib/dto/types";
 import type { ActionSource } from "@calcom/features/booking-audit/lib/types/actionSource";
 import { getBookingEventHandlerService } from "@calcom/features/bookings/di/BookingEventHandlerService.container";
 import type { EventManagerUser } from "@calcom/features/bookings/lib/EventManager";
 import EventManager, { placeholderCreatedEvent } from "@calcom/features/bookings/lib/EventManager";
+import type { ISimpleLogger } from "@calcom/features/di/shared/services/logger.service";
 import { CreditService } from "@calcom/features/ee/billing/credit-service";
 import { getBookerBaseUrl } from "@calcom/features/ee/organizations/lib/getBookerUrlServer";
 import {
   allowDisablingAttendeeConfirmationEmails,
   allowDisablingHostConfirmationEmails,
+  hasAttendeeNewEventEmailWorkflow,
+  hasHostNewEventEmailWorkflow,
 } from "@calcom/features/ee/workflows/lib/allowDisablingStandardEmails";
 import { getAllWorkflowsFromEventType } from "@calcom/features/ee/workflows/lib/getAllWorkflowsFromEventType";
 import { WorkflowService } from "@calcom/features/ee/workflows/lib/service/WorkflowService";
@@ -33,10 +35,8 @@ import type { PlatformClientParams } from "@calcom/prisma/zod-utils";
 import { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
 import type { AdditionalInformation, CalendarEvent } from "@calcom/types/Calendar";
 import { v4 as uuidv4 } from "uuid";
-
 import { getCalEventResponses } from "./getCalEventResponses";
 import { scheduleNoShowTriggers } from "./handleNewBooking/scheduleNoShowTriggers";
-import type { ISimpleLogger } from "@calcom/features/di/shared/services/logger.service";
 
 async function fireBookingAcceptedEvent({
   actor,
@@ -179,16 +179,21 @@ export async function handleConfirmation(args: {
       let isAttendeeConfirmationEmailDisabled = false;
 
       if (workflows) {
-        isHostConfirmationEmailsDisabled =
-          eventTypeMetadata?.disableStandardEmails?.confirmation?.host || false;
-        isAttendeeConfirmationEmailDisabled =
-          eventTypeMetadata?.disableStandardEmails?.confirmation?.attendee || false;
+        const hasHostReplacementEmail = hasHostNewEventEmailWorkflow(workflows);
+        const hasAttendeeReplacementEmail = hasAttendeeNewEventEmailWorkflow(workflows);
 
-        if (isHostConfirmationEmailsDisabled) {
+        isHostConfirmationEmailsDisabled =
+          hasHostReplacementEmail || eventTypeMetadata?.disableStandardEmails?.confirmation?.host || false;
+        isAttendeeConfirmationEmailDisabled =
+          hasAttendeeReplacementEmail ||
+          eventTypeMetadata?.disableStandardEmails?.confirmation?.attendee ||
+          false;
+
+        if (isHostConfirmationEmailsDisabled && !hasHostReplacementEmail) {
           isHostConfirmationEmailsDisabled = allowDisablingHostConfirmationEmails(workflows);
         }
 
-        if (isAttendeeConfirmationEmailDisabled) {
+        if (isAttendeeConfirmationEmailDisabled && !hasAttendeeReplacementEmail) {
           isAttendeeConfirmationEmailDisabled = allowDisablingAttendeeConfirmationEmails(workflows);
         }
       }
@@ -439,18 +444,6 @@ export async function handleConfirmation(args: {
       evtOfBooking.endTime = updatedBookings[index].endTime.toISOString();
       evtOfBooking.uid = updatedBookings[index].uid;
       const isFirstBooking = index === 0;
-
-      if (!eventTypeMetadata?.disableStandardEmails?.all?.attendee) {
-        await scheduleMandatoryReminder({
-          evt: evtOfBooking,
-          workflows,
-          requiresConfirmation: false,
-          hideBranding: !!updatedBookings[index].eventType?.owner?.hideBranding,
-          seatReferenceUid: evt.attendeeSeatId,
-          isPlatformNoEmail: !emailsEnabled && Boolean(platformClientParams?.platformClientId),
-          traceContext: spanContext,
-        });
-      }
 
       const creditService = new CreditService();
 

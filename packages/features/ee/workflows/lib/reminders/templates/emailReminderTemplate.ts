@@ -1,10 +1,20 @@
-import type { TFunction } from "i18next";
-
 import { guessEventLocationType } from "@calcom/app-store/locations";
 import dayjs from "@calcom/dayjs";
 import { APP_NAME } from "@calcom/lib/constants";
 import { TimeFormat } from "@calcom/lib/timeFormat";
 import { WorkflowActions } from "@calcom/prisma/enums";
+import type { TFunction } from "i18next";
+
+const escapeHtml = (value: string): string =>
+  value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+
+const formatMeetingUrl = (meetingUrl?: string): string => {
+  if (!meetingUrl) return "";
+  const escapedMeetingUrl = escapeHtml(meetingUrl);
+  if (!/^https?:\/\//i.test(meetingUrl)) return escapedMeetingUrl;
+
+  return `<a href="${escapedMeetingUrl}" target="_blank" rel="noreferrer">${escapedMeetingUrl}</a>`;
+};
 
 const emailReminderTemplate = ({
   isEditingMode,
@@ -36,12 +46,14 @@ const emailReminderTemplate = ({
   otherPerson?: string;
   name?: string;
   isBrandingDisabled?: boolean;
-}) => {
+}): { emailSubject: string; emailBody: string } => {
   const currentTimeFormat = timeFormat || TimeFormat.TWELVE_HOUR;
   const dateTimeFormat = `ddd, MMM D, YYYY ${currentTimeFormat}`;
 
   let eventDate = "";
-  let locationString = `${guessEventLocationType(location)?.label || location} ${meetingUrl}`;
+  let locationString = [guessEventLocationType(location)?.label || location, formatMeetingUrl(meetingUrl)]
+    .filter(Boolean)
+    .join(" ");
 
   if (isEditingMode) {
     endTime = "{EVENT_END_TIME}";

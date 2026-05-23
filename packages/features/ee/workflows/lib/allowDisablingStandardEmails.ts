@@ -7,7 +7,22 @@ type WorkflowWithStepsAndTrigger = {
   }[];
 };
 
-export function allowDisablingHostConfirmationEmails(workflows: WorkflowWithStepsAndTrigger[]) {
+export function allowDisablingHostConfirmationEmails(workflows: WorkflowWithStepsAndTrigger[]): boolean {
+  return hasHostNewEventEmailWorkflow(workflows);
+}
+
+export function allowDisablingAttendeeConfirmationEmails(workflows: WorkflowWithStepsAndTrigger[]): boolean {
+  return (
+    hasAttendeeNewEventEmailWorkflow(workflows) ||
+    !!workflows.find(
+      (workflow) =>
+        workflow.trigger === WorkflowTriggerEvents.NEW_EVENT &&
+        !!workflow.steps.find((step) => step.action === WorkflowActions.SMS_ATTENDEE)
+    )
+  );
+}
+
+export function hasHostNewEventEmailWorkflow(workflows: WorkflowWithStepsAndTrigger[]): boolean {
   return !!workflows.find(
     (workflow) =>
       workflow.trigger === WorkflowTriggerEvents.NEW_EVENT &&
@@ -15,13 +30,10 @@ export function allowDisablingHostConfirmationEmails(workflows: WorkflowWithStep
   );
 }
 
-export function allowDisablingAttendeeConfirmationEmails(workflows: WorkflowWithStepsAndTrigger[]) {
+export function hasAttendeeNewEventEmailWorkflow(workflows: WorkflowWithStepsAndTrigger[]): boolean {
   return !!workflows.find(
     (workflow) =>
       workflow.trigger === WorkflowTriggerEvents.NEW_EVENT &&
-      !!workflow.steps.find(
-        (step) =>
-          step.action === WorkflowActions.EMAIL_ATTENDEE || step.action === WorkflowActions.SMS_ATTENDEE
-      )
+      !!workflow.steps.find((step) => step.action === WorkflowActions.EMAIL_ATTENDEE)
   );
 }
