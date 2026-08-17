@@ -93,6 +93,17 @@ function replaceVariablePlaceholders(text: string) {
   return text.replace(/\{([A-Z0-9_]+)_VARIABLE}/g, (_, base) => `{${base}}`);
 }
 
+export const MEETING_URL_FALLBACK_TEXT =
+  "The meeting link is not available yet. Please ask the organizer for the link.";
+
+// A missing meeting URL must not leave dead links (href="") behind, so links pointing
+// at {MEETING_URL} are replaced entirely by a notice to contact the organizer.
+function replaceMissingMeetingUrl(text: string) {
+  return text
+    .replace(/<a\b[^>]*href=["']\{MEETING_URL}["'][^>]*>[\s\S]*?<\/a>/gi, MEETING_URL_FALLBACK_TEXT)
+    .replaceAll("{MEETING_URL}", MEETING_URL_FALLBACK_TEXT);
+}
+
 const customTemplate = (
   text: string,
   variables: VariablesType,
@@ -113,6 +124,10 @@ const customTemplate = (
   let locationString = variables.location || "";
 
   text = replaceVariablePlaceholders(text);
+
+  if (!variables.meetingUrl) {
+    text = replaceMissingMeetingUrl(text);
+  }
 
   if (text.includes("{LOCATION}")) {
     locationString = guessEventLocationType(locationString)?.label || locationString;
