@@ -277,6 +277,39 @@ class GoogleCalendarService implements Calendar {
         }
       }
 
+      // Google provisions Meet links asynchronously: the insert response can come back
+      // before the conference is ready, in which case hangoutLink is missing even though
+      // the calendar event will get one moments later. Re-fetch until the link appears so
+      // the booking (and every email rendered from it) carries the Meet link.
+      if (event && event.id && !event.hangoutLink && calEvent.location === MeetLocationType) {
+        const createdEventId = event.id;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+          try {
+            const refetched = await calendar.events.get({
+              calendarId: selectedCalendar,
+              eventId: createdEventId,
+            });
+            if (refetched.data.hangoutLink) {
+              event = refetched.data;
+              break;
+            }
+          } catch (refetchError) {
+            this.log.warn(
+              "Failed to re-fetch google calendar event while waiting for Meet link",
+              safeStringify({ eventId: event.id, attempt, error: refetchError })
+            );
+            break;
+          }
+        }
+        if (!event.hangoutLink) {
+          this.log.warn(
+            "Google Meet link still missing after re-fetch attempts",
+            safeStringify({ eventId: event.id, selectedCalendar })
+          );
+        }
+      }
+
       if (event && event.id && event.hangoutLink) {
         await calendar.events.patch({
           // Update the same event but this time we know the hangout link
