@@ -31,5 +31,15 @@ echo "Seeding app store (errors are non-fatal)..."
 npx ts-node --transpile-only /calcom/scripts/seed-app-store.ts 2>/dev/null || echo "App store seeding had errors (this is OK for initial setup)"
 
 # Start the app
+# Run Next.js directly instead of `yarn start` (yarn -> turbo -> yarn -> next):
+# the three wrapper processes stayed in memory for nothing. `exec` makes Next
+# the container's main process, so it receives Railway's stop signal itself.
+# Falls back to `yarn start` if Next cannot be found.
 echo "Starting Cal.com..."
+cd /calcom/apps/web
+NEXT_BIN=$(node -p "require.resolve('next/dist/bin/next')" 2>/dev/null)
+if [ -n "$NEXT_BIN" ]; then
+  exec node "$NEXT_BIN" start
+fi
+cd /calcom
 yarn start
